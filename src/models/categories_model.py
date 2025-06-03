@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship, Mapped ,mapped_column
 from config.database import engine, base
 
 
-class Category(base):
+class CategoryModel(base):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

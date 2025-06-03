@@ -16,3 +16,6 @@ class CategoriesOut(BaseModel):
     name: str = Field(max_length=50)
     type: CategoryType
     user_id: int
+    
+    class Config:
+        orm_mode = True

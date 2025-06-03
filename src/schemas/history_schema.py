@@ -14,3 +14,6 @@ class HistoryOut(BaseModel):
     amount: int            
     description: str       
     created_at: datetime
+    
+    class Config:
+        orm_mode = True
