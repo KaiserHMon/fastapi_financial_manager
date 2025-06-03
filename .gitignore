@@ -1,3 +1,3 @@
-poetry.lock # Poetry lock file
-__pycache__/ # Python cache directories
-.env # Environment variable file
+poetry.lock
+__pycache__/
+.env
