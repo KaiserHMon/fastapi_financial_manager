@@ -44,4 +44,8 @@ It was developed as a personal practice project to strengthen and apply knowledg
 /tests              # Integration tests
 main.py             # Application entry point
 alembic.ini         # Migration configuration
+<<<<<<< HEAD
 .env.example        # Environment variable template
+=======
+.env.example        # Environment variable template
+>>>>>>> 051b79b7cf24de8097f3a769d9fc46d53ee3cebb
