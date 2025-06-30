@@ -17,6 +17,11 @@ USER_NOT_FOUND = HTTPException(
     detail="Usuario no encontrado."
 )
 
+WRONG_PASSWORD = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST,
+    detail="Contraseña incorrecta."
+)
+
 CREDENTIALS_EXCEPTION = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

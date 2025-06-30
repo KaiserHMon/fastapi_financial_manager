@@ -1,7 +1,10 @@
-from fastapi import Depends, Security
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, SecurityScopes
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer
+
 from schemas.token_schema import TokenData
 from exceptions.http_errors import CREDENTIALS_EXCEPTION
+from services.user_services import get_user
+from dependencies import get_async_db
 
 from datetime import timedelta
 from typing import Annotated
@@ -42,15 +45,14 @@ def create_refresh_token(token_data: TokenData):
 
 
 
-def auth_token(token: Annotated [str, Depends(oauth_bearer)]):
-        try:
-                payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[JWT_ALGORITHM])
-                username: str = payload.get("sub")
-                if username is None:
-                        raise CREDENTIALS_EXCEPTION
-                token_scopes = payload.get("scopes", [])
-                token_data = TokenData(username=username, scopes=token_scopes)
-                return token_data
-        except JWTError:
-                raise CREDENTIALS_EXCEPTION
-                
+async def auth_token(token: Annotated[str, Depends(oauth_bearer)]):
+    try:
+        payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        username = payload.get("sub")
+        if not username:
+            raise CREDENTIALS_EXCEPTION
+            
+        return await get_user(username, get_async_db())
+        
+    except JWTError:
+        raise CREDENTIALS_EXCEPTION
