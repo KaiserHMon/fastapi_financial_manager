@@ -6,18 +6,20 @@ class UserBase(BaseModel):
     full_name: str = Field(min_length=1, max_length=128,
                     description="Full name of the user")
     email: EmailStr
-    
+ 
 
 class UserIn(UserBase):
     password: str = Field(min_length=8, max_length=128,
                     description="Password of the user, must be at least 8 characters long")
-    
+
+
 class UserOut(UserBase):
     pass
 
     class Config:
         orm_mode = True
-    
+
+
 class UserInDB(UserBase):
     hashed_password: str
     

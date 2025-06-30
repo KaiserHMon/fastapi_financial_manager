@@ -16,3 +16,8 @@ USER_NOT_FOUND = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
     detail="Usuario no encontrado."
 )
+
+CREDENTIALS_EXCEPTION = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"})
