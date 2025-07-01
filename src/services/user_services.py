@@ -10,6 +10,3 @@ pwd_context = CryptContext(schemes=["bcrypt"] , deprecated="auto") # Password ha
 async def get_user(username: str, db: AsyncSession) -> UserModel | None:
         user = await db.execute(select(UserModel).where(UserModel.username == username))
         return user.scalar_one_or_none()
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
