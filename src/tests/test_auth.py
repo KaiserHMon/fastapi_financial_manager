@@ -2,10 +2,11 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from src.main import app
-from src.models.user_model import UserModel
-from src.dependencies import get_async_db
-from src.services.password_services import get_password_hash
+from main import app
+from models.user_model import UserModel
+from dependencies import get_async_db
+from services.password_services import get_password_hash
+
 
 # Configure the test database
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -19,7 +20,9 @@ async def override_get_db():
 
 app.dependency_overrides[get_async_db] = override_get_db
 
+
 client = TestClient(app)
+
 
 @pytest.fixture(scope="function")
 async def db_session():
@@ -38,6 +41,7 @@ async def db_session():
 async def test_user(db_session: AsyncSession):
     user = UserModel(
         username="testuser",
+        full_name="Test User",
         email="testuser@example.com",
         password=get_password_hash("password"),
     )
@@ -45,19 +49,21 @@ async def test_user(db_session: AsyncSession):
     await db_session.commit()
     return user
 
-def test_login_for_access_token(test_user):
+
+# Test cases for authentication endpoints
+async def test_login_for_access_token(test_user: UserModel):
     response = client.post("/login", data={"username": "testuser", "password": "password"})
     assert response.status_code == 200
     json_response = response.json()
     assert "access_token" in json_response
     assert json_response["token_type"] == "bearer"
 
-def test_login_for_access_token_user_not_found():
+async def test_login_for_access_token_user_not_found(db_session: AsyncSession):
     response = client.post("/login", data={"username": "nonexistentuser", "password": "password"})
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
 
-def test_login_for_access_token_wrong_password(test_user):
+async def test_login_for_access_token_wrong_password(test_user: UserModel):
     response = client.post("/login", data={"username": "testuser", "password": "wrongpassword"})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Wrong password"}
+    assert response.json() == {"detail": "Incorrect password"}

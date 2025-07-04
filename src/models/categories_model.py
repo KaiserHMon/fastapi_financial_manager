@@ -7,8 +7,8 @@ class CategoryModel(base):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String, unique=True, index=True)
-    type: Mapped[str] = mapped_column(String, nullable=False)  # 'income' or 'expense'
+    name: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    type: Mapped[str] = mapped_column(String(255), nullable=False)  # 'income' or 'expense'
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     
     incomes = relationship("Income", back_populates="Category")

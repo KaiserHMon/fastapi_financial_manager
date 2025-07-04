@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 import uvicorn
 
+from routers.auth import auth
+
+
 app = FastAPI(title="InFinity Managment", version="0.1.0")
+
+app.include_router(auth)
 
 @app.get("/", tags=["Prueba"])
 async def root():

@@ -21,7 +21,7 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 
-oauth_bearer = OAuth2PasswordBearer(tokenUrl='me', scopes=["me"])
+oauth_bearer = OAuth2PasswordBearer(tokenUrl='login', scopes={"me": "Get user information"})
 
 
 def create_access_token(token_data: TokenData):

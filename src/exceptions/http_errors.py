@@ -14,12 +14,12 @@ USER_ALREADY_EXISTS = HTTPException(
 
 USER_NOT_FOUND = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND,
-    detail="Usuario no encontrado."
+    detail="User not found"
 )
 
 WRONG_PASSWORD = HTTPException(
-    status_code=status.HTTP_400_BAD_REQUEST,
-    detail="Contraseña incorrecta."
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Incorrect password"
 )
 
 CREDENTIALS_EXCEPTION = HTTPException(

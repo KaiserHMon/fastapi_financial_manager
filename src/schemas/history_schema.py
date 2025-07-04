@@ -13,7 +13,7 @@ class HistoryOut(BaseModel):
     type: EntryType
     amount: int            
     description: str       
-    created_at: datetime
+    created_at: datetime.datetime
     
     class Config:
         orm_mode = True

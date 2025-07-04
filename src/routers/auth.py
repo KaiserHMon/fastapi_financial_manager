@@ -15,8 +15,6 @@ from services.auth_services import create_access_token
 
 auth = APIRouter()
 
-oauth_bearer = OAuth2PasswordRequestForm(tokenUrl='login', scopes={"me": "Get user information"})
-
 
 @auth.post("/login")
 async def login_for_access_token(formdata: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -31,7 +29,8 @@ async def login_for_access_token(formdata: Annotated[OAuth2PasswordRequestForm, 
     if not is_password_correct:
         raise WRONG_PASSWORD
     
-    access_token = create_access_token(TokenData(username=formdata.username, scopes=formdata.scopes, 
-                                                 issued_at=datetime.now()))
+    token_data = TokenData(username=formdata.username, scopes=" ".join(formdata.scopes), 
+                                                 issued_at=datetime.datetime.now())
+    access_token = create_access_token(token_data)
     
-    return access_token
+    return Token(access_token=access_token['access_token'], token_type='bearer')

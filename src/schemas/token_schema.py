@@ -4,8 +4,8 @@ import datetime
 
 class TokenData(BaseModel):
     username: str | None = None
-    scopes: str | None
-    issued_at: datetime
+    scopes: str | None = None
+    issued_at: datetime.datetime
 
 
 class Token(BaseModel):
