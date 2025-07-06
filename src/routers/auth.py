@@ -6,14 +6,17 @@ import datetime
 
 from schemas.token_schema import Token, TokenData, LogoutRequest
 from dependencies import get_async_db
-from exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD, CREDENTIALS_EXCEPTION
-from models.token_denylist_model import TokenDenylist
+from exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD
 
 from services.user_services import get_user
 from services.password_services import verify_password
-from services.auth_services import create_access_token, create_refresh_token, auth_refresh_token, auth_access_token, SECRET_KEY, JWT_ALGORITHM
-
-from jose import jwt
+from services.auth_services import (
+    create_access_token, 
+    create_refresh_token,
+    auth_access_token,  
+    auth_refresh_token, 
+    add_token_to_denylist
+)
 
 
 auth = APIRouter()
@@ -53,25 +56,5 @@ async def logout(logout_request: LogoutRequest,
                  db: AsyncSession = Depends(get_async_db),
                  current_user: dict = Depends(auth_access_token)):
     
-    try:
-        payload = jwt.decode(
-            logout_request.refresh_token, SECRET_KEY, algorithms=[JWT_ALGORITHM]
-        )
-        jti = payload.get("jti")
-        exp = payload.get("exp")
-
-        # Add the jti to the denylist
-        denylist_entry = TokenDenylist(jti=jti, exp=exp)
-        db.add(denylist_entry)
-        await db.commit()
-
-        return {"detail": "Successfully logged out"}
-
-    except jwt.ExpiredSignatureError:
-        raise CREDENTIALS_EXCEPTION # Refresh token is expired
-    except jwt.InvalidTokenError:
-        raise CREDENTIALS_EXCEPTION # Invalid refresh token
-    except Exception as e:
-        # Log the exception for debugging
-        print(f"Error during logout: {e}")
-        raise CREDENTIALS_EXCEPTION # Generic error
+    await add_token_to_denylist(logout_request.refresh_token, db)
+    return {"detail": "Successfully logged out"}

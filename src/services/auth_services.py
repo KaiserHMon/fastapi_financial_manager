@@ -52,47 +52,50 @@ def create_refresh_token(token_data: TokenData):
         return {"refresh_token": jwt.encode(refresh_token, SECRET_KEY, JWT_ALGORITHM)}
 
 
-
-async def auth_access_token(token: Annotated[str, Depends(oauth_bearer)]):
+def decode_token(token: str):
     try:
-        payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        username = payload.get("sub")
-        type = payload.get("token_type")
-        if not username:
-            raise CREDENTIALS_EXCEPTION
-        if type != "access":
-            raise CREDENTIALS_EXCEPTION
-        
-        return await get_user(username, get_async_db())
-        
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
     except JWTError:
         raise CREDENTIALS_EXCEPTION
+
+
+async def add_token_to_denylist(token: str, db: AsyncSession):
+    payload = decode_token(token)
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    denylist_entry = TokenDenylist(jti=jti, exp=exp)
+    db.add(denylist_entry)
+    await db.commit()
+
+
+async def auth_access_token(token: Annotated[str, Depends(oauth_bearer)]):
+    payload = decode_token(token)
+    username = payload.get("sub")
+    token_type = payload.get("token_type")
+    if not username or token_type != "access":
+        raise CREDENTIALS_EXCEPTION
+    return await get_user(username, get_async_db())
   
     
 async def auth_refresh_token(token: Annotated[str, Depends(oauth_bearer)], db: AsyncSession = Depends(get_async_db)):
-    try:
-        payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        username = payload.get("sub")
-        type = payload.get("token_type")
-        jti = payload.get("jti")
-        
-        if not username or not jti:
-            raise CREDENTIALS_EXCEPTION
-        if type != "refresh":
-            raise CREDENTIALS_EXCEPTION
-
-        # Check if the token has been denylisted
-        result = await db.execute(select(TokenDenylist).filter(TokenDenylist.jti == jti))
-        if result.scalars().first():
-            raise CREDENTIALS_EXCEPTION # Token is denylisted
-         
-        new_access_token = TokenData(
-            username=username,
-            scopes=payload.get("scopes", []),
-            issued_at=datetime.datetime.now())
-           
-        return create_access_token(new_access_token)
-        
-    except JWTError:
+    payload = decode_token(token)
+    username = payload.get("sub")
+    token_type = payload.get("token_type")
+    jti = payload.get("jti")
+    
+    if not username or not jti or token_type != "refresh":
         raise CREDENTIALS_EXCEPTION
+
+    # Check if the token has been denylisted
+    result = await db.execute(select(TokenDenylist).filter(TokenDenylist.jti == jti))
+    if result.scalars().first():
+        raise CREDENTIALS_EXCEPTION # Token is denylisted
+     
+    new_access_token = TokenData(
+        username=username,
+        scopes=payload.get("scopes", []),
+        issued_at=datetime.datetime.now())
+       
+    return create_access_token(new_access_token)
     
