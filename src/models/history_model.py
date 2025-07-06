@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
-from config.database import engine, base
+from src.config.database import base
 
 class HistoryModel(base):
     __tablename__ = "history"
@@ -9,7 +9,3 @@ class HistoryModel(base):
     income_id: Mapped[int] = mapped_column(Integer, ForeignKey('incomes.id'), nullable=True, index=True)
     expense_id: Mapped[int] = mapped_column(Integer, ForeignKey('expenses.id'), nullable=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
-    
-  
-# Create the database tables
-base.metadata.create_all(engine)

@@ -1,10 +1,13 @@
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from schemas.token_schema import TokenData
 from exceptions.http_errors import CREDENTIALS_EXCEPTION
 from services.user_services import get_user
 from dependencies import get_async_db
+from models.token_denylist_model import TokenDenylist
 
 from datetime import timedelta
 from typing import Annotated
@@ -50,7 +53,7 @@ def create_refresh_token(token_data: TokenData):
 
 
 
-async def auth_token(token: Annotated[str, Depends(oauth_bearer)]):
+async def auth_access_token(token: Annotated[str, Depends(oauth_bearer)]):
     try:
         payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[JWT_ALGORITHM])
         username = payload.get("sub")
@@ -66,7 +69,7 @@ async def auth_token(token: Annotated[str, Depends(oauth_bearer)]):
         raise CREDENTIALS_EXCEPTION
   
     
-async def auth_refresh_token(token: Annotated[str, Depends(oauth_bearer)]):
+async def auth_refresh_token(token: Annotated[str, Depends(oauth_bearer)], db: AsyncSession = Depends(get_async_db)):
     try:
         payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[JWT_ALGORITHM])
         username = payload.get("sub")
@@ -77,6 +80,11 @@ async def auth_refresh_token(token: Annotated[str, Depends(oauth_bearer)]):
             raise CREDENTIALS_EXCEPTION
         if type != "refresh":
             raise CREDENTIALS_EXCEPTION
+
+        # Check if the token has been denylisted
+        result = await db.execute(select(TokenDenylist).filter(TokenDenylist.jti == jti))
+        if result.scalars().first():
+            raise CREDENTIALS_EXCEPTION # Token is denylisted
          
         new_access_token = TokenData(
             username=username,

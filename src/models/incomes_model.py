@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from config.database import engine, base
+from src.config.database import base
 
 class IncomeModel(base):
     __tablename__ = 'incomes'
@@ -11,8 +11,4 @@ class IncomeModel(base):
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey('categories.id'), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     
-    category = relationship("Category", back_populates="Income")
-    
-
-# Create the database tables
-base.metadata.create_all(engine)
+    category = relationship("CategoryModel", back_populates="incomes")

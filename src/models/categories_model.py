@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, Mapped ,mapped_column
-from config.database import engine, base
+from src.config.database import base
 
 
 class CategoryModel(base):
@@ -8,12 +8,8 @@ class CategoryModel(base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    type: Mapped[str] = mapped_column(String(255), nullable=False)  # 'income' or 'expense'
+    type: Mapped[str] = mapped_column(String(255), nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     
-    incomes = relationship("Income", back_populates="Category")
-    expenses = relationship("Expense", back_populates="Category")
-    
-    
-# Create the database tables
-base.metadata.create_all(engine)
+    incomes = relationship("IncomeModel", back_populates="category")
+    expenses = relationship("ExpenseModel", back_populates="category")
