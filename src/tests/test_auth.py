@@ -1,34 +1,29 @@
+import os
 import pytest
-from fastapi.testclient import TestClient
+from fastapi import Depends
+
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+
 from main import app
 from models.user_model import UserModel
 from dependencies import get_async_db
 from services.password_services import get_password_hash
 
+os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "5"
+os.environ["REFRESH_TOKEN_EXPIRE_DAYS"] = "7"
 
-# Configure the test database
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 engine = create_async_engine(DATABASE_URL, echo=True)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
-# Dependency override for tests
-async def override_get_db():
-    async with TestingSessionLocal() as session:
-        yield session
-
-app.dependency_overrides[get_async_db] = override_get_db
-
-
-client = TestClient(app)
 
 
 @pytest.fixture(scope="function")
 async def db_session():
     async with engine.begin() as conn:
         await conn.run_sync(UserModel.metadata.create_all)
-    
     db = TestingSessionLocal()
     try:
         yield db
@@ -49,21 +44,73 @@ async def test_user(db_session: AsyncSession):
     await db_session.commit()
     return user
 
+@pytest.fixture(scope="function")
+async def async_client(db_session: AsyncSession):
+    async def get_test_db():
+        yield db_session
+    app.dependency_overrides[get_async_db] = get_test_db
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+    app.dependency_overrides.clear() # Clear overrides after test
 
-# Test cases for authentication endpoints
-async def test_login_for_access_token(test_user: UserModel):
-    response = client.post("/login", data={"username": "testuser", "password": "password"})
+
+
+@pytest.mark.asyncio
+async def test_login_for_access_token(async_client, test_user: UserModel):
+    response = await async_client.post("/login", data={"username": "testuser", "password": "password"})
     assert response.status_code == 200
     json_response = response.json()
     assert "access_token" in json_response
     assert json_response["token_type"] == "bearer"
 
-async def test_login_for_access_token_user_not_found(db_session: AsyncSession):
-    response = client.post("/login", data={"username": "nonexistentuser", "password": "password"})
+@pytest.mark.asyncio
+async def test_login_for_access_token_user_not_found(async_client, db_session: AsyncSession):
+    response = await async_client.post("/login", data={"username": "nonexistentuser", "password": "password"})
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
 
-async def test_login_for_access_token_wrong_password(test_user: UserModel):
-    response = client.post("/login", data={"username": "testuser", "password": "wrongpassword"})
+@pytest.mark.asyncio
+async def test_login_for_access_token_wrong_password(async_client, test_user: UserModel):
+    response = await async_client.post("/login", data={"username": "testuser", "password": "wrongpassword"})
     assert response.status_code == 401
     assert response.json() == {"detail": "Incorrect password"}
+
+
+@pytest.mark.asyncio
+async def test_refresh_token(async_client, test_user: UserModel):
+    login_response = await async_client.post("/login", data={"username": "testuser", "password": "password"})
+    assert login_response.status_code == 200
+    login_json = login_response.json()
+    assert "refresh_token" in login_json
+    refresh_token = login_json["refresh_token"]
+
+    refresh_response = await async_client.post("/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    assert refresh_response.status_code == 200
+    refresh_json = refresh_response.json()
+    assert "access_token" in refresh_json
+    assert refresh_json["token_type"] == "bearer"
+
+@pytest.mark.asyncio
+async def test_refresh_token_invalid(async_client):
+    response = await async_client.post("/refresh", headers={"Authorization": "Bearer invalidtoken"})
+    assert response.status_code == 401
+    assert response.json() == {"detail": "Could not validate credentials"}
+
+
+@pytest.mark.asyncio
+async def test_logout(async_client, test_user: UserModel, db_session: AsyncSession):
+    login_response = await async_client.post("/login", data={"username": "testuser", "password": "password"})
+    assert login_response.status_code == 200
+    login_json = login_response.json()
+    access_token = login_json["access_token"]
+    refresh_token = login_json["refresh_token"]
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    logout_response = await async_client.post("/logout", headers=headers, json={"refresh_token": refresh_token})
+    assert logout_response.status_code == 200
+    assert logout_response.json() == {"detail": "Successfully logged out"}
+
+    refresh_response = await async_client.post("/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
+    assert refresh_response.status_code == 401
+    assert refresh_response.json() == {"detail": "Invalid refresh token"}

@@ -5,7 +5,7 @@ from src.config.database import base
 
 class ExpenseModel(base):
     __tablename__ = 'expenses'
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(255), nullable=True)
     date: Mapped[int] = mapped_column(DateTime, nullable=False)
