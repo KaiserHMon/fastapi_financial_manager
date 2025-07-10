@@ -17,11 +17,6 @@ class UserOut(UserBase):
     pass
 
     class Config:
-        orm_mode = True
-
-
-class UserInDB(UserBase):
-    hashed_password: str
-    
+        from_attributes = True
 
     

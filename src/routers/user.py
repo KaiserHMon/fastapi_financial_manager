@@ -17,9 +17,8 @@ async def register_user(user_in: UserIn, db: AsyncSession = Depends(get_async_db
         raise USER_ALREADY_EXISTS
     
     else:
-        """ try:
-            user_db = UserInDB(**user_in.model_dump())
-            created_user = await create_user(user_db, db)
-            return UserOut(**created_user.dict())
-        except Exception as e:
-            raise USER_CREATION_FAILED from e """
+        try:
+            created_user = await create_user(user_in, db)
+            return created_user
+        except Exception:
+            raise USER_CREATION_FAILED
