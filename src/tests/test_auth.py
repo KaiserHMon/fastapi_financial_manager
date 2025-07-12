@@ -11,8 +11,7 @@ from models.user_model import UserModel
 from dependencies import get_async_db
 from services.password_services import get_password_hash
 
-os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "5"
-os.environ["REFRESH_TOKEN_EXPIRE_DAYS"] = "7"
+
 
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -68,13 +67,13 @@ async def test_login_for_access_token(async_client, test_user: UserModel):
 async def test_login_for_access_token_user_not_found(async_client, db_session: AsyncSession):
     response = await async_client.post("/login", data={"username": "nonexistentuser", "password": "password"})
     assert response.status_code == 404
-    assert response.json() == {"detail": "User not found"}
+    assert response.json() == {"detail": "User not found."}
 
 @pytest.mark.asyncio
 async def test_login_for_access_token_wrong_password(async_client, test_user: UserModel):
     response = await async_client.post("/login", data={"username": "testuser", "password": "wrongpassword"})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Incorrect password"}
+    assert response.json() == {"detail": "Incorrect password."}
 
 
 @pytest.mark.asyncio
@@ -95,7 +94,7 @@ async def test_refresh_token(async_client, test_user: UserModel):
 async def test_refresh_token_invalid(async_client):
     response = await async_client.post("/refresh", headers={"Authorization": "Bearer invalidtoken"})
     assert response.status_code == 401
-    assert response.json() == {"detail": "Could not validate credentials"}
+    assert response.json() == {"detail": "Could not validate credentials."}
 
 
 @pytest.mark.asyncio
@@ -113,4 +112,4 @@ async def test_logout(async_client, test_user: UserModel, db_session: AsyncSessi
 
     refresh_response = await async_client.post("/refresh", headers={"Authorization": f"Bearer {refresh_token}"})
     assert refresh_response.status_code == 401
-    assert refresh_response.json() == {"detail": "Invalid refresh token"}
+    assert refresh_response.json() == {"detail": "Invalid or expired refresh token."}

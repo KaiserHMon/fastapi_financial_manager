@@ -1,12 +1,12 @@
 from pydantic import BaseModel
-import datetime
+from datetime import datetime
 
 
 class TokenData(BaseModel):
     username: str | None = None
     scopes: list[str] | None = None
-    issued_at: datetime.datetime 
-    expired_at: datetime.datetime | None = None
+    issued_at: datetime 
+    expired_at: datetime | None = None
     jti: str | None = None
 
 class Token(BaseModel):

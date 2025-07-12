@@ -1,19 +1,15 @@
-from pydantic import BaseModel, Field
-import datetime
-from enum import Enum
+from pydantic import BaseModel, Field, ConfigDict
+from datetime import datetime
+from typing import Literal
 
-class EntryType(str, Enum):
-    income = "income"
-    expense = "expense"
+class HistoryBase(BaseModel):
+    type: Literal['income', 'expense']
+    amount: float
+    description: str
+    date: datetime
 
-class HistoryOut(BaseModel):
-    history_id: int       
-    user_id: int           
-    item_id: int           
-    type: EntryType
-    amount: int            
-    description: str       
-    created_at: datetime.datetime
-    
-    class Config:
-        from_attributes = True
+class HistoryOut(HistoryBase):
+    id: int
+    category: str
+
+    model_config = ConfigDict(from_attributes=True)

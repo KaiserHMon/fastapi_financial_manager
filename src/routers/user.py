@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
-from schemas.user_schema import UserIn, UserOut
+from schemas.user_schema import UserIn, UserOut, UserBase
 from exceptions.http_errors import (
     USER_CREATION_FAILED,
     USER_ALREADY_EXISTS,
@@ -52,7 +52,7 @@ async def get_current_user_endpoint(
 
 @user.put("/users/me", response_model=UserOut)
 async def update_current_user_endpoint(
-    user_in: UserIn,
+    user_in: UserBase,
     current_user: Annotated[UserModel, Depends(auth_access_token)],
     db: AsyncSession = Depends(get_async_db),
 ):

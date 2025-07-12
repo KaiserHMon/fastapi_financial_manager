@@ -4,6 +4,7 @@ from fastapi_utils.tasks import repeat_every
 from contextlib import asynccontextmanager
 
 from routers.auth import auth
+from routers.user import user
 from tasks import cleanup_expired_tokens
 
 @asynccontextmanager
@@ -20,6 +21,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="InFinity Managment", version="0.1.0", lifespan=lifespan)
 
 app.include_router(auth)
+app.include_router(user)
 
 
 @app.get("/", tags=["Prueba"])

@@ -21,6 +21,7 @@ async def create_user(user: UserIn, db: AsyncSession) -> UserModel:
         user_db = UserModel(**user.model_dump(exclude={"password"}), password=hashed_password)
         db.add(user_db)
         await db.commit()
+        await db.refresh(user_db)
         return user_db
 
 async def update_user(user: UserModel, user_in: UserBase, db: AsyncSession) -> UserModel:

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 class UserBase(BaseModel):
     username: str = Field(min_length=1, max_length=128, pattern="^[A-Za-z0-9-_]+$",
@@ -14,9 +14,6 @@ class UserIn(UserBase):
 
 
 class UserOut(UserBase):
-    pass
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     
