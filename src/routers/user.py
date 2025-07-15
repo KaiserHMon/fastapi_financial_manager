@@ -44,7 +44,7 @@ async def register_user(
 
 
 @user.get("/users/me", response_model=UserOut)
-async def get_current_user_endpoint(
+async def get_current_user(
     current_user: Annotated[UserModel, Depends(auth_access_token)]
 ):
     return current_user
@@ -64,7 +64,7 @@ async def update_current_user_endpoint(
 
 
 @user.delete("/users/me", status_code=204)
-async def delete_current_user_endpoint(
+async def delete_current_user(
     current_user: Annotated[UserModel, Depends(auth_access_token)],
     db: AsyncSession = Depends(get_async_db),
 ):
