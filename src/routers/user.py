@@ -70,6 +70,6 @@ async def delete_current_user(
 ):
     try:
         await delete_user(current_user, db)
+        return {"detail": "User deleted successfully"}
     except Exception:
         raise SERVER_ERROR
-    return None
