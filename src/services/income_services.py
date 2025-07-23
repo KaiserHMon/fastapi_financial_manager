@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 
 from models.incomes_model import IncomeModel
 from models.user_model import UserModel
-from schemas.incomes_schema import IncomeIn, IncomeOut
+from schemas.incomes_schema import IncomeIn
 
 
 async def create_income(income: IncomeIn, user: UserModel, db: AsyncSession) -> IncomeModel:

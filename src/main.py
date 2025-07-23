@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 
 from routers.auth import auth
 from routers.user import user
+from routers.incomes import incomes
+from routers.categories import categories
 from tasks import cleanup_expired_tokens
 
 @asynccontextmanager
@@ -22,6 +24,8 @@ app = FastAPI(title="InFinity Managment", version="0.1.0", lifespan=lifespan)
 
 app.include_router(auth)
 app.include_router(user)
+app.include_router(incomes)
+app.include_router(categories)
 
 
 @app.get("/", tags=["Prueba"])

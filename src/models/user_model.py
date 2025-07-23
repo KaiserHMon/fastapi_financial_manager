@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.config.database import base
 
 class UserModel(base):
@@ -10,3 +10,8 @@ class UserModel(base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    categories = relationship("CategoryModel", back_populates="user")
+    incomes = relationship("IncomeModel", back_populates="user")
+    expenses = relationship("ExpenseModel", back_populates="user")
+    history = relationship("HistoryModel", back_populates="user")

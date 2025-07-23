@@ -11,4 +11,5 @@ class IncomeModel(base):
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey('categories.id'), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     
+    user = relationship("UserModel", back_populates="incomes")
     category = relationship("CategoryModel", back_populates="incomes")

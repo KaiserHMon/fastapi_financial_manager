@@ -51,3 +51,18 @@ SERVER_ERROR = HTTPException(
     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     detail="Internal server error. Contact support."
 )
+
+INCOME_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Income not found."
+)
+
+INCOME_CREATION_FAILED = HTTPException(
+    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    detail="Invalid income data. Check required fields and formats."
+)
+
+INCOME_UPDATE_FAILED = HTTPException(
+    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    detail="Invalid update data. Check provided fields."
+)

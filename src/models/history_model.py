@@ -9,3 +9,5 @@ class HistoryModel(base):
     income_id: Mapped[int] = mapped_column(Integer, ForeignKey('incomes.id'), nullable=True, index=True)
     expense_id: Mapped[int] = mapped_column(Integer, ForeignKey('expenses.id'), nullable=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+
+    user = relationship("UserModel", back_populates="history")
