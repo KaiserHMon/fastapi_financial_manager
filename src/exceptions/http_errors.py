@@ -66,3 +66,18 @@ INCOME_UPDATE_FAILED = HTTPException(
     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     detail="Invalid update data. Check provided fields."
 )
+
+EXPENSE_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Expense not found."
+)
+
+EXPENSE_CREATION_FAILED = HTTPException(
+    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    detail="Invalid expense data. Check required fields and formats."
+)
+
+EXPENSE_UPDATE_FAILED = HTTPException(
+    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    detail="Invalid update data. Check provided fields."
+)
