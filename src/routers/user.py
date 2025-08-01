@@ -43,14 +43,14 @@ async def register_user(
         raise USER_CREATION_FAILED
 
 
-@user.get("/users/me", response_model=UserOut)
+@user.get("/me", response_model=UserOut)
 async def get_current_user(
     current_user: Annotated[UserModel, Depends(auth_access_token)]
 ):
     return current_user
 
 
-@user.put("/users/me", response_model=UserOut)
+@user.put("/me", response_model=UserOut)
 async def update_current_user_endpoint(
     user_in: UserBase,
     current_user: Annotated[UserModel, Depends(auth_access_token)],
@@ -63,7 +63,7 @@ async def update_current_user_endpoint(
         raise USER_CREATION_FAILED
 
 
-@user.delete("/users/me", status_code=204)
+@user.delete("/me", status_code=204)
 async def delete_current_user(
     current_user: Annotated[UserModel, Depends(auth_access_token)],
     db: AsyncSession = Depends(get_async_db),

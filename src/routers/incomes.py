@@ -23,7 +23,7 @@ from exceptions.http_errors import (
 incomes = APIRouter()
 
 
-@incomes.post("/incomes", response_model=IncomeOut)
+@incomes.post("/", response_model=IncomeOut)
 async def create_income(
     income_in: IncomeIn,
     current_user: UserModel = Depends(auth_access_token),
@@ -40,7 +40,7 @@ async def create_income(
         raise SERVER_ERROR
 
 
-@incomes.get("/incomes", response_model=list[IncomeOut])
+@incomes.get("/", response_model=list[IncomeOut])
 async def get_incomes(
     current_user: UserModel = Depends(auth_access_token),
     db: AsyncSession = Depends(get_async_db)
@@ -51,7 +51,7 @@ async def get_incomes(
         raise SERVER_ERROR
 
 
-@incomes.put("/incomes/{income_id}", response_model=IncomeOut)
+@incomes.put("/{income_id}", response_model=IncomeOut)
 async def update_income(
     income_id: int,
     income_in: IncomeIn,
@@ -73,7 +73,7 @@ async def update_income(
         raise SERVER_ERROR
 
 
-@incomes.delete("/incomes/{income_id}")
+@incomes.delete("/{income_id}")
 async def delete_income(
     income_id: int,
     current_user: UserModel = Depends(auth_access_token),
@@ -92,7 +92,7 @@ async def delete_income(
         raise SERVER_ERROR
 
 
-@incomes.get("/incomes/{income_id}", response_model=IncomeOut)
+@incomes.get("/{income_id}", response_model=IncomeOut)
 async def get_income_by_id(
     income_id: int,
     current_user: UserModel = Depends(auth_access_token),
