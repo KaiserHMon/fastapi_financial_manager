@@ -10,27 +10,24 @@ from src.exceptions.http_errors import (
     EXPENSE_CREATION_FAILED,
     EXPENSE_UPDATE_FAILED,
 )
-from src.services.expenses_service import (
-    create_expense,
-    get_expenses,
-    get_expense_by_id,
-    update_expense,
-    delete_expense,
-)
+from src.services.expenses_service import ExpenseServices
 from src.schemas.expenses_schema import ExpenseIn, ExpenseOut
 from src.models.user_model import UserModel
 
 expenses_router = APIRouter()
 
 
-@expenses_router.post("/", response_model=ExpenseOut, status_code=status.HTTP_201_CREATED)
+@expenses_router.post(
+    "/", response_model=ExpenseOut, status_code=status.HTTP_201_CREATED
+)
 async def add_expense(
     expense: ExpenseIn,
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
 ):
+    expense_services = ExpenseServices(db)
     try:
-        return await create_expense(expense, current_user, db)
+        return await expense_services.create_expense(expense, current_user)
     except IntegrityError:  # Catches issues like invalid category_id
         raise EXPENSE_CREATION_FAILED
 
@@ -40,8 +37,8 @@ async def list_expenses(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
 ):
-
-    return await get_expenses(current_user, db)
+    expense_services = ExpenseServices(db)
+    return await expense_services.get_expenses(current_user)
 
 
 @expenses_router.get("/{expense_id}", response_model=ExpenseOut)
@@ -50,7 +47,8 @@ async def retrieve_expense(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
 ):
-    expense = await get_expense_by_id(expense_id, current_user, db)
+    expense_services = ExpenseServices(db)
+    expense = await expense_services.get_expense_by_id(expense_id, current_user)
     if not expense:
         raise EXPENSE_NOT_FOUND
     return expense
@@ -63,8 +61,11 @@ async def modify_expense(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
 ):
+    expense_services = ExpenseServices(db)
     try:
-        updated_expense = await update_expense(expense_id, expense_in, current_user, db)
+        updated_expense = await expense_services.update_expense(
+            expense_id, expense_in, current_user
+        )
         if not updated_expense:
             raise EXPENSE_NOT_FOUND
         return updated_expense
@@ -78,7 +79,8 @@ async def remove_expense(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
 ):
-    expense_to_delete = await delete_expense(expense_id, current_user, db)
+    expense_services = ExpenseServices(db)
+    expense_to_delete = await expense_services.delete_expense(expense_id, current_user)
     if not expense_to_delete:
         raise EXPENSE_NOT_FOUND
     return
