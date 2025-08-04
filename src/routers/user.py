@@ -12,32 +12,24 @@ from exceptions.http_errors import (
 from dependencies import get_async_db
 from services.auth_services import auth_access_token
 from models.user_model import UserModel
-
-from services.user_services import (
-    create_user,
-    get_user_by_email,
-    update_user,
-    delete_user,
-    get_user,
-)
+from services.user_services import UserServices
 
 user = APIRouter()
 
 
 @user.post("/register", response_model=UserOut, status_code=201)
-async def register_user(
-    user_in: UserIn, db: AsyncSession = Depends(get_async_db)
-):
-    existing_user = await get_user(user_in.username, db)
+async def register_user(user_in: UserIn, db: AsyncSession = Depends(get_async_db)):
+    user_services = UserServices(db)
+    existing_user = await user_services.get_user(user_in.username)
     if existing_user:
         raise USER_ALREADY_EXISTS
 
-    existing_email = await get_user_by_email(user_in.email, db)
+    existing_email = await user_services.get_user_by_email(user_in.email)
     if existing_email:
         raise EMAIL_ALREADY_EXISTS
 
     try:
-        created_user = await create_user(user_in, db)
+        created_user = await user_services.create_user(user_in)
         return created_user
     except Exception:
         raise USER_CREATION_FAILED
@@ -56,8 +48,9 @@ async def update_current_user_endpoint(
     current_user: Annotated[UserModel, Depends(auth_access_token)],
     db: AsyncSession = Depends(get_async_db),
 ):
+    user_services = UserServices(db)
     try:
-        updated_user = await update_user(current_user, user_in, db)
+        updated_user = await user_services.update_user(current_user, user_in)
         return updated_user
     except Exception:
         raise USER_CREATION_FAILED
@@ -68,8 +61,9 @@ async def delete_current_user(
     current_user: Annotated[UserModel, Depends(auth_access_token)],
     db: AsyncSession = Depends(get_async_db),
 ):
+    user_services = UserServices(db)
     try:
-        await delete_user(current_user, db)
+        await user_services.delete_user(current_user)
         return {"detail": "User deleted successfully"}
     except Exception:
         raise SERVER_ERROR

@@ -25,6 +25,22 @@ USER_NOT_FOUND = HTTPException(
     detail="User not found."
 )
 
+INCOME_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Income not found."
+)
+
+EXPENSE_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Expense not found."
+)
+
+CATEGORY_NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Category not found."
+)
+
+
 # Errores de conflicto (409)
 USER_ALREADY_EXISTS = HTTPException(
     status_code=status.HTTP_409_CONFLICT,
@@ -34,6 +50,13 @@ USER_ALREADY_EXISTS = HTTPException(
 EMAIL_ALREADY_EXISTS = HTTPException(
     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     detail="Email already registered. Use a different email.")
+
+
+CATEGORY_ALREADY_EXISTS = HTTPException(
+    status_code=status.HTTP_409_CONFLICT,
+    detail="Category with this name already exists."
+)
+
 
 # Errores de validación (422)
 USER_CREATION_FAILED = HTTPException(
@@ -46,17 +69,6 @@ USER_UPDATE_FAILED = HTTPException(
     detail="Invalid update data. Check provided fields."
 )
 
-# Errores internos (500) → Solo para fallos inesperados del sistema
-SERVER_ERROR = HTTPException(
-    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    detail="Internal server error. Contact support."
-)
-
-INCOME_NOT_FOUND = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND,
-    detail="Income not found."
-)
-
 INCOME_CREATION_FAILED = HTTPException(
     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     detail="Invalid income data. Check required fields and formats."
@@ -67,10 +79,6 @@ INCOME_UPDATE_FAILED = HTTPException(
     detail="Invalid update data. Check provided fields."
 )
 
-EXPENSE_NOT_FOUND = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND,
-    detail="Expense not found."
-)
 
 EXPENSE_CREATION_FAILED = HTTPException(
     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -80,4 +88,17 @@ EXPENSE_CREATION_FAILED = HTTPException(
 EXPENSE_UPDATE_FAILED = HTTPException(
     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     detail="Invalid update data. Check provided fields."
+)
+
+
+CATEGORY_CREATION_FAILED = HTTPException(
+    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+    detail="Invalid category data. Check required fields and formats."
+)
+
+
+# Errores internos (500) → Solo para fallos inesperados del sistema
+SERVER_ERROR = HTTPException(
+    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    detail="Internal server error. Contact support."
 )
