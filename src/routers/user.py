@@ -8,6 +8,7 @@ from exceptions.http_errors import (
     USER_ALREADY_EXISTS,
     SERVER_ERROR,
     EMAIL_ALREADY_EXISTS,
+    USER_NOT_FOUND
 )
 from dependencies import get_async_db
 from services import auth_services, user_services
@@ -35,9 +36,9 @@ async def register_user(user_in: UserIn, db: AsyncSession = Depends(get_async_db
 
 @user.get("/me", response_model=UserOut)
 async def get_current_user(
-    current_user: UserModel = Depends(auth_services.auth_access_token),
+    current_user: UserModel = Depends(auth_services.auth_access_token)
 ):
-    return current_user
+    return UserOut.model_validate(current_user)
 
 
 @user.put("/me", response_model=UserOut)
@@ -65,18 +66,6 @@ async def delete_current_user(
         raise SERVER_ERROR
 
 
-@user.get("/all", response_model=list[UserOut])
-async def get_all_users(
-    current_user: UserModel = Depends(auth_services.auth_access_token),
-    db: AsyncSession = Depends(get_async_db),
-):
-    try:
-        users = await user_services.get_all_users(db)
-        return users
-    except Exception:
-        raise SERVER_ERROR
-
-
 @user.get("/{user_id}", response_model=UserOut)
 async def get_user_by_id(
     user_id: int,
@@ -85,6 +74,9 @@ async def get_user_by_id(
 ):
     try:
         user = await user_services.get_user_by_id(db, user_id)
-        return user
+        if not user:
+            raise USER_NOT_FOUND
+        # Convertimos el modelo SQLAlchemy a Pydantic
+        return UserOut.model_validate(user)
     except Exception:
         raise SERVER_ERROR

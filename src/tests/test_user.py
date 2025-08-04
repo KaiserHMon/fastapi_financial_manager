@@ -59,26 +59,26 @@ async def test_user(db_session: AsyncSession):
 
 @pytest.fixture(scope="function")
 async def access_token(async_client: AsyncClient, test_user: UserModel):
-    response = await async_client.post("/login", data={"username": "testuser", "password": "password"})
+    response = await async_client.post("/auth/login", data={"username": "testuser", "password": "password"})
     return response.json()["access_token"]
 
 
 @pytest.mark.asyncio
 async def test_get_user(db_session: AsyncSession):
-    user = await get_user("testuser", db_session)
+    user = await get_user(db_session, "testuser")
     assert user is None
 
 
 @pytest.mark.asyncio
 async def test_get_user_by_email(db_session: AsyncSession):
-    user = await get_user_by_email("test@example.com", db_session)
+    user = await get_user_by_email(db_session, "test@example.com")
     assert user is None
 
 
 @pytest.mark.asyncio
 async def test_create_user(db_session: AsyncSession):
     user_in = UserIn(username="testuser", full_name="Test User", email="test@example.com", password="password")
-    user = await create_user(user_in, db_session)
+    user = await create_user(db_session, user_in)
     assert user.username == "testuser"
     assert user.full_name == "Test User"
     assert user.email == "test@example.com"
@@ -87,9 +87,9 @@ async def test_create_user(db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_update_user(db_session: AsyncSession):
     user_in = UserIn(username="testuser", full_name="Test User", email="test@example.com", password="password")
-    user = await create_user(user_in, db_session)
+    user = await create_user(db_session, user_in)
     user_update = UserBase(username="testuser2", full_name="Test User 2", email="test2@example.com")
-    updated_user = await update_user(user, user_update, db_session)
+    updated_user = await update_user(db_session, user, user_update)
     assert updated_user.username == "testuser2"
     assert updated_user.full_name == "Test User 2"
     assert updated_user.email == "test2@example.com"
@@ -97,7 +97,7 @@ async def test_update_user(db_session: AsyncSession):
     
 @pytest.mark.asyncio
 async def test_register_user(async_client: AsyncClient):
-    response = await async_client.post("/register", json={"username": "testuser", "full_name": "Test User", "email": "test@example.com", "password": "password"})
+    response = await async_client.post("/user/register", json={"username": "testuser", "full_name": "Test User", "email": "test@example.com", "password": "password"})
     assert response.status_code == 201
     data = response.json()
     assert data["username"] == "testuser"
@@ -109,8 +109,8 @@ async def test_register_user(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_register_user_already_exists(async_client: AsyncClient, db_session: AsyncSession):
     user_in = UserIn(username="testuser", full_name="Test User", email="test@example.com", password="password")
-    await create_user(user_in, db_session)
-    response = await async_client.post("/register", json={"username": "testuser", "full_name": "Test User", "email": "test2@example.com", "password": "password"})
+    await create_user(db_session, user_in)
+    response = await async_client.post("/user/register", json={"username": "testuser", "full_name": "Test User", "email": "test2@example.com", "password": "password"})
     assert response.status_code == 409
     assert response.json()["detail"] == "Username already registered. Use a different username."
 
@@ -118,15 +118,15 @@ async def test_register_user_already_exists(async_client: AsyncClient, db_sessio
 @pytest.mark.asyncio
 async def test_register_user_email_already_exists(async_client: AsyncClient, db_session: AsyncSession):
     user_in = UserIn(username="testuser", full_name="Test User", email="test@example.com", password="password")
-    await create_user(user_in, db_session)
-    response = await async_client.post("/register", json={"username": "testuser2", "full_name": "Test User 2", "email": "test@example.com", "password": "password"})
+    await create_user(db_session, user_in)
+    response = await async_client.post("/user/register", json={"username": "testuser2", "full_name": "Test User 2", "email": "test@example.com", "password": "password"})
     assert response.status_code == 422
     assert response.json()["detail"] == "Email already registered. Use a different email."
 
 
 @pytest.mark.asyncio
 async def test_get_current_user(async_client: AsyncClient, access_token: str):
-    response = await async_client.get("/users/me", headers={"Authorization": f"Bearer {access_token}"})
+    response = await async_client.get("/user/me", headers={"Authorization": f"Bearer {access_token}"})
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "testuser"
@@ -136,7 +136,7 @@ async def test_get_current_user(async_client: AsyncClient, access_token: str):
 
 @pytest.mark.asyncio
 async def test_update_current_user(async_client: AsyncClient, access_token: str):
-    response = await async_client.put("/users/me", headers={"Authorization": f"Bearer {access_token}"}, json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
+    response = await async_client.put("/user/me", headers={"Authorization": f"Bearer {access_token}"}, json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "testuser2"
@@ -146,49 +146,49 @@ async def test_update_current_user(async_client: AsyncClient, access_token: str)
 
 @pytest.mark.asyncio
 async def test_delete_current_user(async_client: AsyncClient, access_token: str, db_session: AsyncSession):
-    response = await async_client.delete("/users/me", headers={"Authorization": f"Bearer {access_token}"})
+    response = await async_client.delete("/user/me", headers={"Authorization": f"Bearer {access_token}"})
     assert response.status_code == 204
-    user = await get_user("testuser", db_session)
+    user = await get_user(db_session, "testuser")
     assert user is None
 
 
 @pytest.mark.asyncio
 async def test_get_current_user_no_token(async_client: AsyncClient):
-    response = await async_client.get("/users/me")
+    response = await async_client.get("/user/me")
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
 
 @pytest.mark.asyncio
 async def test_update_current_user_no_token(async_client: AsyncClient):
-    response = await async_client.put("/users/me", json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
+    response = await async_client.put("/user/me", json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
 
 @pytest.mark.asyncio
 async def test_delete_current_user_no_token(async_client: AsyncClient):
-    response = await async_client.delete("/users/me")
+    response = await async_client.delete("/user/me")
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
 
 @pytest.mark.asyncio
 async def test_get_current_user_invalid_token(async_client: AsyncClient):
-    response = await async_client.get("/users/me", headers={"Authorization": "Bearer invalidtoken"})
+    response = await async_client.get("/user/me", headers={"Authorization": "Bearer invalidtoken"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Could not validate credentials."
 
 
 @pytest.mark.asyncio
 async def test_update_current_user_invalid_token(async_client: AsyncClient):
-    response = await async_client.put("/users/me", headers={"Authorization": "Bearer invalidtoken"}, json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
+    response = await async_client.put("/user/me", headers={"Authorization": "Bearer invalidtoken"}, json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Could not validate credentials."
 
 
 @pytest.mark.asyncio
 async def test_delete_current_user_invalid_token(async_client: AsyncClient):
-    response = await async_client.delete("/users/me", headers={"Authorization": "Bearer invalidtoken"})
+    response = await async_client.delete("/user/me", headers={"Authorization": "Bearer invalidtoken"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Could not validate credentials."

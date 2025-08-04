@@ -31,7 +31,7 @@ async def update_user(db: AsyncSession, user: UserModel, user_in: UserBase) -> U
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    return user
+    return UserModel(**user.__dict__)
 
 
 async def delete_user(db: AsyncSession, user: UserModel) -> None:

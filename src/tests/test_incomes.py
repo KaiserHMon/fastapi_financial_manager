@@ -81,13 +81,13 @@ async def test_category(db_session: AsyncSession, test_user: UserModel):
 
 @pytest.fixture(scope="function")
 async def access_token(async_client: AsyncClient, test_user: UserModel):
-    response = await async_client.post("/login", data={"username": "testuser", "password": "password"})
+    response = await async_client.post("/auth/login", data={"username": "testuser", "password": "password"})
     return response.json()["access_token"]
 
 
 @pytest.mark.asyncio
 async def test_create_income(async_client: AsyncClient, access_token: str, test_user: UserModel, test_category: CategoryModel):
-    response = await async_client.post("/incomes", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
+    response = await async_client.post("/incomes/", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
     assert response.status_code == 200
     data = response.json()
     assert data["amount"] == 100
@@ -97,10 +97,10 @@ async def test_create_income(async_client: AsyncClient, access_token: str, test_
 
 @pytest.mark.asyncio
 async def test_get_incomes(async_client: AsyncClient, access_token: str, test_user: UserModel, test_category: CategoryModel):
-    response = await async_client.post("/incomes", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
+    response = await async_client.post("/incomes/", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
     assert response.status_code == 200
 
-    response = await async_client.get("/incomes", headers={"Authorization": f"Bearer {access_token}"})
+    response = await async_client.get("/incomes/", headers={"Authorization": f"Bearer {access_token}"})
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -112,7 +112,7 @@ async def test_get_incomes(async_client: AsyncClient, access_token: str, test_us
 
 @pytest.mark.asyncio
 async def test_get_income_by_id(async_client: AsyncClient, access_token: str, test_user: UserModel, test_category: CategoryModel):
-    response = await async_client.post("/incomes", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
+    response = await async_client.post("/incomes/", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
     assert response.status_code == 200
     income_id = response.json()["id"]
 
@@ -127,7 +127,7 @@ async def test_get_income_by_id(async_client: AsyncClient, access_token: str, te
 
 @pytest.mark.asyncio
 async def test_update_income(async_client: AsyncClient, access_token: str, test_user: UserModel, test_category: CategoryModel):
-    response = await async_client.post("/incomes", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
+    response = await async_client.post("/incomes/", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
     assert response.status_code == 200
     income_id = response.json()["id"]
 
@@ -140,7 +140,7 @@ async def test_update_income(async_client: AsyncClient, access_token: str, test_
 
 @pytest.mark.asyncio
 async def test_delete_income(async_client: AsyncClient, access_token: str, test_user: UserModel, test_category: CategoryModel):
-    response = await async_client.post("/incomes", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
+    response = await async_client.post("/incomes/", headers={"Authorization": f"Bearer {access_token}"}, json={"amount": 100, "description": "Test Income", "date": "2025-07-21T14:00:00", "category_id": test_category.id})
     assert response.status_code == 200
     income_id = response.json()["id"]
 

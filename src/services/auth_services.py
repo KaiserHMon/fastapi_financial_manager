@@ -7,6 +7,7 @@ from schemas.token_schema import TokenData
 from exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN
 from services import user_services
 from models.token_denylist_model import TokenDenylist
+from models.user_model import UserModel
 
 from datetime import timedelta
 from typing import Annotated
@@ -93,7 +94,9 @@ async def auth_access_token(
     user = await user_services.get_user(db, username)
     if not user:
         raise CREDENTIALS_EXCEPTION
-    return user
+    user_dict = user.__dict__
+    user_dict.pop("_sa_instance_state", None)
+    return UserModel(**user_dict)
 
 
 async def auth_refresh_token(
