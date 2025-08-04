@@ -5,8 +5,7 @@ from sqlalchemy.future import select
 
 from schemas.token_schema import TokenData
 from exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN
-from services.user_services import UserServices
-from dependencies import get_async_db
+from services import user_services
 from models.token_denylist_model import TokenDenylist
 
 from datetime import timedelta
@@ -32,93 +31,91 @@ oauth_bearer = OAuth2PasswordBearer(
 )
 
 
-class AuthServices:
-    def __init__(self, db: AsyncSession):
-        self.db = db
+def create_access_token(token_data: TokenData) -> str:
+    issued_at = int(token_data.issued_at.timestamp())
+    exp = int(
+        (
+            token_data.issued_at + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        ).timestamp()
+    )
+    access_token = {
+        "sub": token_data.username,
+        "scopes": token_data.scopes,
+        "iat": issued_at,
+        "exp": exp,
+        "token_type": "access",
+        "jti": str(uuid.uuid4()),
+    }
+    return jwt.encode(access_token, SECRET_KEY, JWT_ALGORITHM)
 
-    def create_access_token(self, token_data: TokenData) -> str:
-        issued_at = int(token_data.issued_at.timestamp())
-        exp = int(
-            (
-                token_data.issued_at
-                + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-            ).timestamp()
-        )
-        access_token = {
-            "sub": token_data.username,
-            "scopes": token_data.scopes,
-            "iat": issued_at,
-            "exp": exp,
-            "token_type": "access",
-            "jti": str(uuid.uuid4()),
-        }
-        return jwt.encode(access_token, SECRET_KEY, JWT_ALGORITHM)
 
-    def create_refresh_token(self, token_data: TokenData) -> str:
-        issued_at = int(token_data.issued_at.timestamp())
-        exp = int(
-            (
-                token_data.issued_at + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-            ).timestamp()
-        )
-        refresh_token = {
-            "sub": token_data.username,
-            "scopes": token_data.scopes,
-            "iat": issued_at,
-            "exp": exp,
-            "token_type": "refresh",
-            "jti": str(uuid.uuid4()),
-        }
-        return jwt.encode(refresh_token, SECRET_KEY, JWT_ALGORITHM)
+def create_refresh_token(token_data: TokenData) -> str:
+    issued_at = int(token_data.issued_at.timestamp())
+    exp = int(
+        (token_data.issued_at + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)).timestamp()
+    )
+    refresh_token = {
+        "sub": token_data.username,
+        "scopes": token_data.scopes,
+        "iat": issued_at,
+        "exp": exp,
+        "token_type": "refresh",
+        "jti": str(uuid.uuid4()),
+    }
+    return jwt.encode(refresh_token, SECRET_KEY, JWT_ALGORITHM)
 
-    def decode_token(self, token: str):
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            return payload
-        except JWTError:
-            raise CREDENTIALS_EXCEPTION
 
-    async def add_token_to_denylist(self, token: str):
-        payload = self.decode_token(token)
-        jti = payload.get("jti")
-        exp = payload.get("exp")
-        denylist_entry = TokenDenylist(jti=jti, exp=exp)
-        self.db.add(denylist_entry)
-        await self.db.commit()
+def decode_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except JWTError:
+        raise CREDENTIALS_EXCEPTION
 
-    async def auth_access_token(self, token: Annotated[str, Depends(oauth_bearer)]):
-        payload = self.decode_token(token)
-        username = payload.get("sub")
-        token_type = payload.get("token_type")
-        if not username or token_type != "access":
-            raise CREDENTIALS_EXCEPTION
-        user_services = UserServices(self.db)
-        user = await user_services.get_user(username)
-        if not user:
-            raise CREDENTIALS_EXCEPTION
-        return user
 
-    async def auth_refresh_token(self, token: Annotated[str, Depends(oauth_bearer)]):
-        payload = self.decode_token(token)
-        username = payload.get("sub")
-        token_type = payload.get("token_type")
-        jti = payload.get("jti")
+async def add_token_to_denylist(db: AsyncSession, token: str):
+    payload = decode_token(token)
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    denylist_entry = TokenDenylist(jti=jti, exp=exp)
+    db.add(denylist_entry)
+    await db.commit()
 
-        if not username or token_type != "refresh":
-            raise INVALID_REFRESH_TOKEN
 
-        # Check if the token has been denylisted
-        result = await self.db.execute(
-            select(TokenDenylist).filter(TokenDenylist.jti == jti)
-        )
-        if result.scalars().first():
-            raise INVALID_REFRESH_TOKEN  # Token is denylisted
+async def auth_access_token(
+    db: AsyncSession, token: Annotated[str, Depends(oauth_bearer)]
+):
+    payload = decode_token(token)
+    username = payload.get("sub")
+    token_type = payload.get("token_type")
+    if not username or token_type != "access":
+        raise CREDENTIALS_EXCEPTION
+    user = await user_services.get_user(db, username)
+    if not user:
+        raise CREDENTIALS_EXCEPTION
+    return user
 
-        new_access_token = TokenData(
-            username=username,
-            scopes=payload.get("scopes", []),
-            issued_at=datetime.datetime.now(),
-        )
 
-        return self.create_access_token(new_access_token)
-    
+async def auth_refresh_token(
+    db: AsyncSession, token: Annotated[str, Depends(oauth_bearer)]
+):
+    payload = decode_token(token)
+    username = payload.get("sub")
+    token_type = payload.get("token_type")
+    jti = payload.get("jti")
+
+    if not username or token_type != "refresh":
+        raise INVALID_REFRESH_TOKEN
+
+    # Check if the token has been denylisted
+    result = await db.execute(select(TokenDenylist).filter(TokenDenylist.jti == jti))
+    if result.scalars().first():
+        raise INVALID_REFRESH_TOKEN  # Token is denylisted
+
+    new_access_token = TokenData(
+        username=username,
+        scopes=payload.get("scopes", []),
+        issued_at=datetime.datetime.now(),
+    )
+
+    return create_access_token(new_access_token)

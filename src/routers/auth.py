@@ -14,9 +14,7 @@ from schemas.token_schema import (
 from dependencies import get_async_db
 from exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD
 
-from services.user_services import UserServices
-from services.password_services import PasswordServices
-from services.auth_services import AuthServices
+from services import user_services, password_services, auth_services
 
 
 auth = APIRouter()
@@ -32,11 +30,7 @@ async def login_for_tokens(
     formdata: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncSession = Depends(get_async_db),
 ):
-    user_services = UserServices(db)
-    password_services = PasswordServices()
-    auth_services = AuthServices(db)
-
-    user = await user_services.get_user(formdata.username)
+    user = await user_services.get_user(db, formdata.username)
     if not user:
         raise USER_NOT_FOUND
 
@@ -66,8 +60,12 @@ async def login_for_tokens(
     summary="Refresh access token",
     description="Refreshes an access token using a valid refresh token.",
 )
-async def refresh_access_token(token: str = Depends(AuthServices(Depends(get_async_db)).auth_refresh_token)):
-    return {"access_token": token, "token_type": "bearer"}
+async def refresh_access_token(
+    db: AsyncSession = Depends(get_async_db),
+    token: str = Depends(auth_services.oauth_bearer),
+):
+    new_token = await auth_services.auth_refresh_token(db, token)
+    return {"access_token": new_token, "token_type": "bearer"}
 
 
 @auth.post(
@@ -79,8 +77,7 @@ async def refresh_access_token(token: str = Depends(AuthServices(Depends(get_asy
 async def logout(
     logout_request: LogoutRequest,
     db: AsyncSession = Depends(get_async_db),
-    current_user: dict = Depends(AuthServices(Depends(get_async_db)).auth_access_token),
+    token: str = Depends(auth_services.oauth_bearer),
 ):
-    auth_services = AuthServices(db)
-    await auth_services.add_token_to_denylist(logout_request.refresh_token)
+    await auth_services.add_token_to_denylist(db, logout_request.refresh_token)
     return {"detail": "Successfully logged out"}

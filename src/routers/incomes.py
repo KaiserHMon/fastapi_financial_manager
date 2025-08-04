@@ -4,8 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from schemas.incomes_schema import IncomeIn, IncomeOut
 from models.user_model import UserModel
 from dependencies import get_async_db
-from services.auth_services import auth_access_token
-from services.income_services import IncomeServices
+from services import auth_services, income_services
 from exceptions.http_errors import (
     INCOME_NOT_FOUND,
     INCOME_CREATION_FAILED,
@@ -19,12 +18,13 @@ incomes = APIRouter()
 @incomes.post("/", response_model=IncomeOut)
 async def create_income(
     income_in: IncomeIn,
-    current_user: UserModel = Depends(auth_access_token),
+    current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
-    income_services = IncomeServices(db)
     try:
-        created_income = await income_services.create_income(income_in, current_user)
+        created_income = await income_services.create_income(
+            db, income_in, current_user
+        )
         if not created_income:
             raise INCOME_CREATION_FAILED
         return created_income
@@ -36,12 +36,11 @@ async def create_income(
 
 @incomes.get("/", response_model=list[IncomeOut])
 async def get_incomes(
-    current_user: UserModel = Depends(auth_access_token),
+    current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
-    income_services = IncomeServices(db)
     try:
-        return await income_services.get_incomes(current_user)
+        return await income_services.get_incomes(db, current_user)
     except Exception:
         raise SERVER_ERROR
 
@@ -50,16 +49,15 @@ async def get_incomes(
 async def update_income(
     income_id: int,
     income_in: IncomeIn,
-    current_user: UserModel = Depends(auth_access_token),
+    current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
-    income_services = IncomeServices(db)
     try:
-        income = await income_services.get_income_by_id(income_id, current_user)
+        income = await income_services.get_income_by_id(db, income_id, current_user)
         if not income:
             raise INCOME_NOT_FOUND
 
-        updated_income = await income_services.update_income(income, income_in)
+        updated_income = await income_services.update_income(db, income, income_in)
         if not updated_income:
             raise INCOME_UPDATE_FAILED
         return updated_income
@@ -72,16 +70,15 @@ async def update_income(
 @incomes.delete("/{income_id}")
 async def delete_income(
     income_id: int,
-    current_user: UserModel = Depends(auth_access_token),
+    current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
-    income_services = IncomeServices(db)
     try:
-        income = await income_services.get_income_by_id(income_id, current_user)
+        income = await income_services.get_income_by_id(db, income_id, current_user)
         if not income:
             raise INCOME_NOT_FOUND
 
-        await income_services.delete_income(income)
+        await income_services.delete_income(db, income)
         return {"detail": "Income deleted successfully"}
     except HTTPException as http_exc:
         raise http_exc
@@ -92,12 +89,11 @@ async def delete_income(
 @incomes.get("/{income_id}", response_model=IncomeOut)
 async def get_income_by_id(
     income_id: int,
-    current_user: UserModel = Depends(auth_access_token),
+    current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
-    income_services = IncomeServices(db)
     try:
-        income = await income_services.get_income_by_id(income_id, current_user)
+        income = await income_services.get_income_by_id(db, income_id, current_user)
         if not income:
             raise INCOME_NOT_FOUND
         return income
@@ -105,4 +101,3 @@ async def get_income_by_id(
         raise http_exc
     except Exception:
         raise SERVER_ERROR
-
