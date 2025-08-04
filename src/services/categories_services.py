@@ -6,24 +6,21 @@ from sqlalchemy.orm import joinedload
 from models.categories_model import CategoryModel
 from models.user_model import UserModel
 from schemas.categories_schema import CategoriesIn
-from exceptions.http_errors import NameAlreadyExists, NotFoundException
 
 
 class CategoriesServices:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-
-    async def create_category(self, category: CategoriesIn, user: UserModel):
-        category_exists = await self.db.execute(
+    async def get_category_by_name(self, category_name: str, user: UserModel) -> CategoryModel | None:
+        result = await self.db.execute(
             select(CategoryModel).where(
-                CategoryModel.name == category.name, CategoryModel.user_id == user.id
+                CategoryModel.name == category_name, CategoryModel.user_id == user.id
             )
         )
+        return result.scalars().first()
 
-        if category_exists.scalars().first():
-            raise NameAlreadyExists()
-
+    async def create_category(self, category: CategoriesIn, user: UserModel):
         new_category = CategoryModel(**category.model_dump(), user_id=user.id)
         self.db.add(new_category)
         await self.db.commit()
@@ -46,28 +43,15 @@ class CategoriesServices:
                 CategoryModel.id == category_id, CategoryModel.user_id == user.id
             )
         )
-        category = result.scalars().first()
-
-        if not category:
-            raise NotFoundException()
-
-        return category
+        return result.scalars().first()
 
 
     async def update_category(
         self, category_id: int, category_data: CategoriesIn, user: UserModel
     ):
         category = await self.get_category(category_id, user)
-
-        category_exists = await self.db.execute(
-            select(CategoryModel).where(
-                CategoryModel.name == category_data.name,
-                CategoryModel.user_id == user.id,
-            )
-        )
-
-        if category_exists.scalars().first():
-            raise NameAlreadyExists()
+        if not category:
+            return None
 
         for key, value in category_data.model_dump().items():
             setattr(category, key, value)
@@ -78,6 +62,9 @@ class CategoriesServices:
 
     async def delete_category(self, category_id: int, user: UserModel):
         category = await self.get_category(category_id, user)
+        if not category:
+            return None
         await self.db.delete(category)
         await self.db.commit()
         return True
+

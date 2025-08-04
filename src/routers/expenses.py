@@ -62,12 +62,13 @@ async def modify_expense(
     current_user: UserModel = Depends(auth_access_token),
 ):
     expense_services = ExpenseServices(db)
+    expense = await expense_services.get_expense_by_id(expense_id, current_user)
+    if not expense:
+        raise EXPENSE_NOT_FOUND
     try:
         updated_expense = await expense_services.update_expense(
-            expense_id, expense_in, current_user
+            expense, expense_in, current_user
         )
-        if not updated_expense:
-            raise EXPENSE_NOT_FOUND
         return updated_expense
     except IntegrityError:
         raise EXPENSE_UPDATE_FAILED

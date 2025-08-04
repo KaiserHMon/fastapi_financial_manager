@@ -19,11 +19,13 @@ class ExpenseServices:
         await self.db.refresh(expenses_db)
         return expenses_db
 
+
     async def get_expenses(self, user: UserModel):
         result = await self.db.execute(
             select(ExpenseModel).where(ExpenseModel.user_id == user.id)
         )
         return result.scalars().all()
+
 
     async def get_expense_by_id(self, expense_id: int, user: UserModel):
         result = await self.db.execute(
@@ -32,6 +34,7 @@ class ExpenseServices:
             )
         )
         return result.scalars().first()
+
 
     async def update_expense(
         self, expense_id: int, expense_in: ExpenseIn, user: UserModel
@@ -44,6 +47,7 @@ class ExpenseServices:
         await self.db.commit()
         await self.db.refresh(expense_db)
         return expense_db
+
 
     async def delete_expense(self, expense_id: int, user: UserModel):
         expense_db = await self.get_expense_by_id(expense_id, user)
