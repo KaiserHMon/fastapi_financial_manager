@@ -37,6 +37,7 @@ async def root():
 if __name__ == '__main__':
     uvicorn.run("main:app", port=8080, host='0.0.0.0', reload=True)
     # http://localhost:8080/
+    # poetry run uvicorn src.main:app --reload
 
 
 __init__ = "src.main"

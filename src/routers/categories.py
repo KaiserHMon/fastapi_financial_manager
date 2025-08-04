@@ -14,10 +14,10 @@ from src.services.categories_services import CategoriesServices
 from src.schemas.categories_schema import CategoriesIn, CategoriesOut
 from src.models.user_model import UserModel
 
-categories_router = APIRouter()
+categories = APIRouter()
 
 
-@categories_router.post(
+@categories.post(
     "/", response_model=CategoriesOut, status_code=status.HTTP_201_CREATED
 )
 async def add_category(
@@ -35,7 +35,7 @@ async def add_category(
         raise CATEGORY_CREATION_FAILED
 
 
-@categories_router.get("/", response_model=List[CategoriesOut])
+@categories.get("/", response_model=List[CategoriesOut])
 async def list_categories(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
@@ -44,7 +44,7 @@ async def list_categories(
     return await category_services.get_categories(current_user)
 
 
-@categories_router.get("/{category_id}", response_model=CategoriesOut)
+@categories.get("/{category_id}", response_model=CategoriesOut)
 async def retrieve_category(
     category_id: int,
     db: AsyncSession = Depends(get_async_db),
@@ -57,7 +57,7 @@ async def retrieve_category(
     return category
 
 
-@categories_router.put("/{category_id}", response_model=CategoriesOut)
+@categories.put("/{category_id}", response_model=CategoriesOut)
 async def modify_category(
     category_id: int,
     category_in: CategoriesIn,
@@ -79,7 +79,7 @@ async def modify_category(
         raise CATEGORY_CREATION_FAILED
 
 
-@categories_router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@categories.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_category(
     category_id: int,
     db: AsyncSession = Depends(get_async_db),

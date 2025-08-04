@@ -14,10 +14,10 @@ from src.services.expenses_service import ExpenseServices
 from src.schemas.expenses_schema import ExpenseIn, ExpenseOut
 from src.models.user_model import UserModel
 
-expenses_router = APIRouter()
+expenses = APIRouter()
 
 
-@expenses_router.post(
+@expenses.post(
     "/", response_model=ExpenseOut, status_code=status.HTTP_201_CREATED
 )
 async def add_expense(
@@ -32,7 +32,7 @@ async def add_expense(
         raise EXPENSE_CREATION_FAILED
 
 
-@expenses_router.get("/", response_model=List[ExpenseOut])
+@expenses.get("/", response_model=List[ExpenseOut])
 async def list_expenses(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_access_token),
@@ -41,7 +41,7 @@ async def list_expenses(
     return await expense_services.get_expenses(current_user)
 
 
-@expenses_router.get("/{expense_id}", response_model=ExpenseOut)
+@expenses.get("/{expense_id}", response_model=ExpenseOut)
 async def retrieve_expense(
     expense_id: int,
     db: AsyncSession = Depends(get_async_db),
@@ -54,7 +54,7 @@ async def retrieve_expense(
     return expense
 
 
-@expenses_router.put("/{expense_id}", response_model=ExpenseOut)
+@expenses.put("/{expense_id}", response_model=ExpenseOut)
 async def modify_expense(
     expense_id: int,
     expense_in: ExpenseIn,
@@ -74,7 +74,7 @@ async def modify_expense(
         raise EXPENSE_UPDATE_FAILED
 
 
-@expenses_router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
+@expenses.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_expense(
     expense_id: int,
     db: AsyncSession = Depends(get_async_db),
