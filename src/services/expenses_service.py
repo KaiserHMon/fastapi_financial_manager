@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from models.user_model import UserModel
-from models.expenses_model import ExpenseModel
-from schemas.expenses_schema import ExpenseIn
+from ..models.user_model import UserModel
+from ..models.expenses_model import ExpenseModel
+from ..schemas.expenses_schema import ExpenseIn
 
 
 async def create_expense(

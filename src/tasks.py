@@ -3,8 +3,8 @@ from sqlalchemy.future import select
 from sqlalchemy import delete
 from datetime import datetime
 
-from models.token_denylist_model import TokenDenylist
-from dependencies import get_async_db
+from .models.token_denylist_model import TokenDenylist
+from .dependencies import get_async_db
 
 
 async def cleanup_expired_tokens():

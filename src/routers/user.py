@@ -2,17 +2,17 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
-from schemas.user_schema import UserIn, UserOut, UserBase
-from exceptions.http_errors import (
+from ..schemas.user_schema import UserIn, UserOut, UserBase
+from ..exceptions.http_errors import (
     USER_CREATION_FAILED,
     USER_ALREADY_EXISTS,
     SERVER_ERROR,
     EMAIL_ALREADY_EXISTS,
     USER_NOT_FOUND
 )
-from dependencies import get_async_db
-from services import auth_services, user_services
-from models.user_model import UserModel
+from ..dependencies import get_async_db
+from ..services import auth_services, user_services
+from ..models.user_model import UserModel
 
 user = APIRouter()
 

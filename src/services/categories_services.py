@@ -3,9 +3,9 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 
-from models.categories_model import CategoryModel
-from models.user_model import UserModel
-from schemas.categories_schema import CategoriesIn
+from ..models.categories_model import CategoryModel
+from ..models.user_model import UserModel
+from ..schemas.categories_schema import CategoriesIn
 
 
 async def get_category_by_name(

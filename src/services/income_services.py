@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from models.incomes_model import IncomeModel
-from models.user_model import UserModel
-from schemas.incomes_schema import IncomeIn
+from ..models.incomes_model import IncomeModel
+from ..models.user_model import UserModel
+from ..schemas.incomes_schema import IncomeIn
 
 
 async def create_income(

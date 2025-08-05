@@ -4,17 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 import datetime
 
-from schemas.token_schema import (
+from ..schemas.token_schema import (
     Token,
     TokenData,
     LogoutRequest,
     LogoutResponse,
     AccessTokenResponse,
 )
-from dependencies import get_async_db
-from exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD
+from ..dependencies import get_async_db
+from ..exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD
 
-from services import user_services, password_services, auth_services
+from ..services import user_services, password_services, auth_services
 
 
 auth = APIRouter()
@@ -61,10 +61,8 @@ async def login_for_tokens(
     description="Refreshes an access token using a valid refresh token.",
 )
 async def refresh_access_token(
-    db: AsyncSession = Depends(get_async_db),
-    token: str = Depends(auth_services.oauth_bearer),
+    new_token: str = Depends(auth_services.auth_refresh_token),
 ):
-    new_token = await auth_services.auth_refresh_token(db, token)
     return {"access_token": new_token, "token_type": "bearer"}
 
 

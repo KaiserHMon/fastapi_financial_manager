@@ -3,14 +3,14 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
-from main import app
-from models.user_model import UserModel
-from models.incomes_model import IncomeModel
-from models.categories_model import CategoryModel
-from models.expenses_model import ExpenseModel
-from models.history_model import HistoryModel
-from dependencies import get_async_db
-from services.password_services import get_password_hash
+from ..main import app
+from ..models.user_model import UserModel
+from ..models.incomes_model import IncomeModel
+from ..models.categories_model import CategoryModel
+from ..models.expenses_model import ExpenseModel
+from ..models.history_model import HistoryModel
+from ..dependencies import get_async_db
+from ..services.password_services import get_password_hash
 
 
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"

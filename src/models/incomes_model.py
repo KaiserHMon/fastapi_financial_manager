@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from src.config.database import base
+from ..config.database import base
 
 class IncomeModel(base):
     __tablename__ = 'incomes'

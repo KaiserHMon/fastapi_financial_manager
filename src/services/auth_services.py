@@ -3,11 +3,12 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from schemas.token_schema import TokenData
-from exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN
-from services import user_services
-from models.token_denylist_model import TokenDenylist
-from models.user_model import UserModel
+from ..schemas.token_schema import TokenData
+from ..exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN
+from ..services import user_services
+from ..models.token_denylist_model import TokenDenylist
+from ..models.user_model import UserModel
+from ..dependencies import get_async_db
 
 from datetime import timedelta
 from typing import Annotated
@@ -84,7 +85,8 @@ async def add_token_to_denylist(db: AsyncSession, token: str):
 
 
 async def auth_access_token(
-    db: AsyncSession, token: Annotated[str, Depends(oauth_bearer)]
+    token: Annotated[str, Depends(oauth_bearer)],
+    db: AsyncSession = Depends(get_async_db),
 ):
     payload = decode_token(token)
     username = payload.get("sub")
@@ -94,13 +96,12 @@ async def auth_access_token(
     user = await user_services.get_user(db, username)
     if not user:
         raise CREDENTIALS_EXCEPTION
-    user_dict = user.__dict__
-    user_dict.pop("_sa_instance_state", None)
-    return UserModel(**user_dict)
+    return user
 
 
 async def auth_refresh_token(
-    db: AsyncSession, token: Annotated[str, Depends(oauth_bearer)]
+    token: Annotated[str, Depends(oauth_bearer)],
+    db: AsyncSession = Depends(get_async_db),
 ):
     payload = decode_token(token)
     username = payload.get("sub")

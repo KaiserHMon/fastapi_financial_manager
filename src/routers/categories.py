@@ -3,15 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from dependencies import get_async_db
-from services import auth_services, categories_services
-from exceptions.http_errors import (
+from ..dependencies import get_async_db
+from ..services import auth_services, categories_services
+from ..exceptions.http_errors import (
     CATEGORY_NOT_FOUND,
     CATEGORY_CREATION_FAILED,
     CATEGORY_ALREADY_EXISTS,
 )
-from schemas.categories_schema import CategoriesIn, CategoriesOut
-from models.user_model import UserModel
+from ..schemas.categories_schema import CategoriesIn, CategoriesOut
+from ..models.user_model import UserModel
 
 categories = APIRouter()
 

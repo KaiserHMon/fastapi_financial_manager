@@ -3,12 +3,12 @@ import uvicorn
 from fastapi_utils.tasks import repeat_every
 from contextlib import asynccontextmanager
 
-from routers.auth import auth
-from routers.user import user
-from routers.incomes import incomes
-from routers.categories import categories
-from routers.expenses import expenses
-from tasks import cleanup_expired_tokens
+from .routers.auth import auth
+from .routers.user import user
+from .routers.incomes import incomes
+from .routers.categories import categories
+from .routers.expenses import expenses
+from .tasks import cleanup_expired_tokens
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

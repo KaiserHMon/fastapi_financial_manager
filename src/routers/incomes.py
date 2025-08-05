@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from schemas.incomes_schema import IncomeIn, IncomeOut
-from models.user_model import UserModel
-from dependencies import get_async_db
-from services import auth_services, income_services
-from exceptions.http_errors import (
+from ..schemas.incomes_schema import IncomeIn, IncomeOut
+from ..models.user_model import UserModel
+from ..dependencies import get_async_db
+from ..services import auth_services, income_services
+from ..exceptions.http_errors import (
     INCOME_NOT_FOUND,
     INCOME_CREATION_FAILED,
     INCOME_UPDATE_FAILED,

@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from models.user_model import UserModel
-from schemas.user_schema import UserIn, UserBase
-from services.password_services import get_password_hash
+from ..models.user_model import UserModel
+from ..schemas.user_schema import UserIn, UserBase
+from ..services.password_services import get_password_hash
 
 
 async def get_user(db: AsyncSession, username: str) -> UserModel | None:
@@ -31,7 +31,7 @@ async def update_user(db: AsyncSession, user: UserModel, user_in: UserBase) -> U
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    return UserModel(**user.__dict__)
+    return user
 
 
 async def delete_user(db: AsyncSession, user: UserModel) -> None:

@@ -3,15 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from dependencies import get_async_db
-from services import auth_services, expenses_service
-from exceptions.http_errors import (
+from ..dependencies import get_async_db
+from ..services import auth_services, expenses_service
+from ..exceptions.http_errors import (
     EXPENSE_NOT_FOUND,
     EXPENSE_CREATION_FAILED,
     EXPENSE_UPDATE_FAILED,
 )
-from schemas.expenses_schema import ExpenseIn, ExpenseOut
-from models.user_model import UserModel
+from ..schemas.expenses_schema import ExpenseIn, ExpenseOut
+from ..models.user_model import UserModel
 
 expenses = APIRouter()
 
