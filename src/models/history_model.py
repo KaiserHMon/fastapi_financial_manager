@@ -3,11 +3,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..config.database import base
 
 class HistoryModel(base):
-    __tablename__ = "history"
+    __tablename__ = "histories"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     income_id: Mapped[int] = mapped_column(Integer, ForeignKey('incomes.id'), nullable=True, index=True)
     expense_id: Mapped[int] = mapped_column(Integer, ForeignKey('expenses.id'), nullable=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False, index=True)
 
-    user = relationship("UserModel", back_populates="history")
+    user = relationship("UserModel", back_populates="histories")
