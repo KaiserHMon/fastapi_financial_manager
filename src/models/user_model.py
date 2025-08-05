@@ -11,7 +11,7 @@ class UserModel(base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    categories = relationship("CategoryModel", back_populates="users")
-    incomes = relationship("IncomeModel", back_populates="users")
-    expenses = relationship("ExpenseModel", back_populates="users")
-    histories = relationship("HistoryModel", back_populates="users")
+    categories = relationship("CategoryModel", back_populates="user")
+    incomes = relationship("IncomeModel", back_populates="user")
+    expenses = relationship("ExpenseModel", back_populates="user")
+    histories = relationship("HistoryModel", back_populates="user")

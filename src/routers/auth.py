@@ -10,6 +10,7 @@ from ..schemas.token_schema import (
     LogoutRequest,
     LogoutResponse,
     AccessTokenResponse,
+    RefreshTokenRequest
 )
 from ..dependencies import get_async_db
 from ..exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD
@@ -42,7 +43,7 @@ async def login_for_tokens(
 
     token_data = TokenData(
         username=formdata.username,
-        scopes=formdata.scopes.split() if formdata.scopes else [],
+        scopes=formdata.scopes if formdata.scopes else [],
         issued_at=datetime.datetime.now(),
     )
 
@@ -61,8 +62,10 @@ async def login_for_tokens(
     description="Refreshes an access token using a valid refresh token.",
 )
 async def refresh_access_token(
-    new_token: str = Depends(auth_services.auth_refresh_token),
+    refresh_token_request: RefreshTokenRequest,
+    db: AsyncSession = Depends(get_async_db),
 ):
+    new_token = await auth_services.auth_refresh_token(refresh_token_request.refresh_token, db)
     return {"access_token": new_token, "token_type": "bearer"}
 
 

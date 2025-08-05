@@ -29,7 +29,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
 
 
 oauth_bearer = OAuth2PasswordBearer(
-    tokenUrl="login", scopes={"me": "Get user information"}
+    tokenUrl="/auth/login", scopes={"me": "Get user information"}
 )
 
 
@@ -100,7 +100,7 @@ async def auth_access_token(
 
 
 async def auth_refresh_token(
-    token: Annotated[str, Depends(oauth_bearer)],
+    token: str,
     db: AsyncSession = Depends(get_async_db),
 ):
     payload = decode_token(token)
