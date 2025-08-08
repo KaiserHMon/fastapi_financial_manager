@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated
+from typing import List, Annotated
+from datetime import date
 
 from ..schemas.user_schema import UserIn, UserOut, UserBase
+from ..schemas.history_schema import HistoryOut
 from ..exceptions.http_errors import (
     USER_CREATION_FAILED,
     USER_ALREADY_EXISTS,
@@ -11,7 +13,7 @@ from ..exceptions.http_errors import (
     USER_NOT_FOUND
 )
 from ..dependencies import get_async_db
-from ..services import auth_services, user_services
+from ..services import auth_services, user_services, history_services
 from ..models.user_model import UserModel
 
 user = APIRouter()
@@ -42,7 +44,7 @@ async def get_current_user(
 
 
 @user.put("/me", response_model=UserOut)
-async def update_current_user_endpoint(
+async def update_current_user(
     user_in: UserBase,
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
@@ -67,7 +69,7 @@ async def delete_current_user(
 
 
 @user.get("/{user_id}", response_model=UserOut)
-async def get_user_by_id(
+async def get_user_id(
     user_id: int,
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
@@ -76,7 +78,22 @@ async def get_user_by_id(
         user = await user_services.get_user_by_id(db, user_id)
         if not user:
             raise USER_NOT_FOUND
-        # Convertimos el modelo SQLAlchemy a Pydantic
         return UserOut.model_validate(user)
+    except Exception:
+        raise SERVER_ERROR
+
+
+@user.get("/me/history", response_model=List[HistoryOut])
+async def get_user_history(
+    current_user: UserModel = Depends(auth_services.auth_access_token),
+    db: AsyncSession = Depends(get_async_db),
+    from_date: date | None = Query(default=None),
+    to_date: date | None = Query(default=None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100)
+):
+    try:
+        return await history_services.get_history_entries(db, current_user,
+                                                          from_date, to_date, skip, limit)
     except Exception:
         raise SERVER_ERROR

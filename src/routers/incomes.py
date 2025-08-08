@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import date
 
 from ..schemas.incomes_schema import IncomeIn, IncomeOut
 from ..models.user_model import UserModel
 from ..dependencies import get_async_db
-from ..services import auth_services, income_services
+from ..services import auth_services, incomes_services
 from ..exceptions.http_errors import (
     INCOME_NOT_FOUND,
     INCOME_CREATION_FAILED,
@@ -22,7 +23,7 @@ async def create_income(
     db: AsyncSession = Depends(get_async_db),
 ):
     try:
-        created_income = await income_services.create_income(
+        created_income = await incomes_services.create_income(
             db, income_in, current_user
         )
         if not created_income:
@@ -38,9 +39,11 @@ async def create_income(
 async def get_incomes(
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
+    from_date: date | None = Query(default=None),
+    to_date: date | None = Query(default=None),
 ):
     try:
-        return await income_services.get_incomes(db, current_user)
+        return await incomes_services.get_incomes(db, current_user, from_date, to_date)
     except Exception:
         raise SERVER_ERROR
 
@@ -53,11 +56,11 @@ async def update_income(
     db: AsyncSession = Depends(get_async_db),
 ):
     try:
-        income = await income_services.get_income_by_id(db, income_id, current_user)
+        income = await incomes_services.get_income_by_id(db, income_id, current_user)
         if not income:
             raise INCOME_NOT_FOUND
 
-        updated_income = await income_services.update_income(db, income, income_in)
+        updated_income = await incomes_services.update_income(db, income, income_in)
         if not updated_income:
             raise INCOME_UPDATE_FAILED
         return updated_income
@@ -74,11 +77,11 @@ async def delete_income(
     db: AsyncSession = Depends(get_async_db),
 ):
     try:
-        income = await income_services.get_income_by_id(db, income_id, current_user)
+        income = await incomes_services.get_income_by_id(db, income_id, current_user)
         if not income:
             raise INCOME_NOT_FOUND
 
-        await income_services.delete_income(db, income)
+        await incomes_services.delete_income(db, income)
         return {"detail": "Income deleted successfully"}
     except HTTPException as http_exc:
         raise http_exc
@@ -93,7 +96,7 @@ async def get_income_by_id(
     db: AsyncSession = Depends(get_async_db),
 ):
     try:
-        income = await income_services.get_income_by_id(db, income_id, current_user)
+        income = await incomes_services.get_income_by_id(db, income_id, current_user)
         if not income:
             raise INCOME_NOT_FOUND
         return income

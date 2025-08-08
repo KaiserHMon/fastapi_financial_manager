@@ -1,5 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
+
+from datetime import date
+
 
 from ..models.user_model import UserModel
 from ..models.expenses_model import ExpenseModel
@@ -16,10 +20,23 @@ async def create_expense(
     return expenses_db
 
 
-async def get_expenses(db: AsyncSession, user: UserModel):
-    result = await db.execute(
-        select(ExpenseModel).where(ExpenseModel.user_id == user.id)
+async def get_expenses(
+    db: AsyncSession,
+    user: UserModel,
+    from_date: date | None,
+    to_date: date | None,
+) -> list[ExpenseModel]:
+    query = (
+        select(ExpenseModel)
+        .options(joinedload(ExpenseModel.category))
+        .where(ExpenseModel.user_id == user.id)
     )
+    if from_date:
+        query = query.where(ExpenseModel.date >= from_date)
+    if to_date:
+        query = query.where(ExpenseModel.date <= to_date)
+
+    result = await db.execute(query)
     return result.scalars().all()
 
 

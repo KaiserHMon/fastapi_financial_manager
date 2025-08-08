@@ -1,5 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
+
+from datetime import date
 
 from ..models.incomes_model import IncomeModel
 from ..models.user_model import UserModel
@@ -16,10 +19,23 @@ async def create_income(
     return income_db
 
 
-async def get_incomes(db: AsyncSession, user: UserModel) -> list[IncomeModel]:
-    incomes = await db.execute(
-        select(IncomeModel).where(IncomeModel.user_id == user.id)
+async def get_incomes(
+    db: AsyncSession,
+    user: UserModel,
+    from_date: date | None,
+    to_date: date | None,
+) -> list[IncomeModel]:
+    query = (
+        select(IncomeModel)
+        .options(joinedload(IncomeModel.category))
+        .where(IncomeModel.user_id == user.id)
     )
+    if from_date:
+        query = query.where(IncomeModel.date >= from_date)
+    if to_date:
+        query = query.where(IncomeModel.date <= to_date)
+
+    incomes = await db.execute(query)
     return incomes.scalars().all()
 
 
