@@ -81,4 +81,5 @@ async def logout(
     token: str = Depends(auth_services.oauth_bearer),
 ):
     await auth_services.add_token_to_denylist(db, logout_request.refresh_token)
+    await auth_services.add_token_to_denylist(db, token)
     return {"detail": "Successfully logged out"}

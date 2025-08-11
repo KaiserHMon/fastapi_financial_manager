@@ -91,8 +91,16 @@ async def auth_access_token(
     payload = decode_token(token)
     username = payload.get("sub")
     token_type = payload.get("token_type")
+    jti = payload.get("jti")
+    
     if not username or token_type != "access":
         raise CREDENTIALS_EXCEPTION
+    
+    # Check if the token has been denylisted    
+    result = await db.execute(select(TokenDenylist).filter(TokenDenylist.jti == jti))
+    if result.scalars().first():
+        raise CREDENTIALS_EXCEPTION # Token is denylisted
+
     user = await user_services.get_user(db, username)
     if not user:
         raise CREDENTIALS_EXCEPTION
