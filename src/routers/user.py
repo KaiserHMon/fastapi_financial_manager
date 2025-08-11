@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Annotated
+from typing import List
 from datetime import date
 
-from ..schemas.user_schema import UserIn, UserOut, UserBase
+from ..schemas.user_schema import UserIn, UserOut, UserUpdateProfile
 from ..schemas.history_schema import HistoryOut
 from ..exceptions.http_errors import (
     USER_CREATION_FAILED,
@@ -45,7 +45,7 @@ async def get_current_user(
 
 @user.put("/me", response_model=UserOut)
 async def update_current_user(
-    user_in: UserBase,
+    user_in: UserUpdateProfile,
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):

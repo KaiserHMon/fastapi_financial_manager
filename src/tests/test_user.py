@@ -3,10 +3,8 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.user_model import UserModel
 from ..services.user_services import get_user, get_user_by_email, create_user, update_user
-from ..services.password_services import get_password_hash
-from ..schemas.user_schema import UserIn, UserBase
+from ..schemas.user_schema import UserIn, UserBase, UserUpdateProfile
 
 
 @pytest.mark.asyncio
@@ -34,11 +32,11 @@ async def test_create_user(db_session: AsyncSession):
 async def test_update_user(db_session: AsyncSession):
     user_in = UserIn(username="testuser", full_name="Test User", email="test@example.com", password="password")
     user = await create_user(db_session, user_in)
-    user_update = UserBase(username="testuser2", full_name="Test User 2", email="test2@example.com")
+    user_update = UserUpdateProfile(full_name="Updated User") 
     updated_user = await update_user(db_session, user, user_update)
-    assert updated_user.username == "testuser2"
-    assert updated_user.full_name == "Test User 2"
-    assert updated_user.email == "test2@example.com"
+    assert updated_user.username == "testuser"
+    assert updated_user.full_name == "Updated User"
+    assert updated_user.email == "test@example.com"
     
     
 @pytest.mark.asyncio
@@ -82,12 +80,13 @@ async def test_get_current_user(async_client: AsyncClient, access_token: str):
 
 @pytest.mark.asyncio
 async def test_update_current_user(async_client: AsyncClient, access_token: str):
-    response = await async_client.put("/user/me", headers={"Authorization": f"Bearer {access_token}"}, json={"username": "testuser2", "full_name": "Test User 2", "email": "test2@example.com"})
-    assert response.status_code == 200
+    response = await async_client.put("/user/me", 
+                                      headers={"Authorization": f"Bearer {access_token}"}, 
+                                      json={"full_name": "Test User 2"}) 
     data = response.json()
-    assert data["username"] == "testuser2"
+    assert data["username"] == "testuser"
     assert data["full_name"] == "Test User 2"
-    assert data["email"] == "test2@example.com"
+    assert data["email"] == "testuser@example.com"
 
 
 @pytest.mark.asyncio

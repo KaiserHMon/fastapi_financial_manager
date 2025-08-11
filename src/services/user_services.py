@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from ..models.user_model import UserModel
-from ..schemas.user_schema import UserIn, UserBase
+from ..schemas.user_schema import UserIn, UserUpdateProfile
 from ..services.password_services import get_password_hash
 
 
@@ -24,9 +24,9 @@ async def create_user(db: AsyncSession, user: UserIn) -> UserModel:
     return user_db
 
 
-async def update_user(db: AsyncSession, user: UserModel, user_in: UserBase) -> UserModel:
-    for field, value in user_in.model_dump(exclude_unset=True).items():
-        setattr(user, field, value)
+async def update_user(db: AsyncSession, user: UserModel, user_in: UserUpdateProfile) -> UserModel:
+    if user_in.full_name is not None:
+        user.full_name = user_in.full_name
 
     db.add(user)
     await db.commit()
