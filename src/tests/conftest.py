@@ -6,16 +6,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from ..main import app
-import uuid
 from ..models.user_model import UserModel
 from ..models.incomes_model import IncomeModel
 from ..models.categories_model import CategoryModel
 from ..models.expenses_model import ExpenseModel
 from ..models.history_model import HistoryModel
-from ..models.token_denylist_model import TokenDenylist
 from ..dependencies import get_async_db
 from ..services.password_services import get_password_hash
-from config.database import base
 
 
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"

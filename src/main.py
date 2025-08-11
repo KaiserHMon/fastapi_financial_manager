@@ -8,7 +8,7 @@ from .routers.user import user
 from .routers.incomes import incomes
 from .routers.categories import categories
 from .routers.expenses import expenses
-from .routers.balance import balance
+from .routers.user_balance import balance
 from .tasks import cleanup_expired_tokens
 
 @asynccontextmanager
@@ -25,11 +25,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="InFinity Managment", version="0.1.0", lifespan=lifespan)
 
 app.include_router(auth, prefix="/auth", tags=["Auth"])
+app.include_router(balance, prefix="/user", tags=["Balance"])
 app.include_router(user, prefix="/user", tags=["User"])
 app.include_router(incomes, prefix="/incomes", tags=["Incomes"])
 app.include_router(categories, prefix="/categories", tags=["Categories"])
 app.include_router(expenses, prefix="/expenses", tags=["Expenses"])
-app.include_router(balance, prefix="/balance", tags=["Balance"])
 
 
 @app.get("/", tags=["Root"])
