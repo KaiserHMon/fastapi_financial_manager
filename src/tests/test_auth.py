@@ -61,7 +61,7 @@ async def test_logout(async_client, test_user: UserModel, db_session: AsyncSessi
 
     refresh_response = await async_client.post("/auth/refresh", json={"refresh_token": refresh_token})
     assert refresh_response.status_code == 401
-    assert refresh_response.json() == {"detail": "Invalid or expired refresh token."}
+    assert refresh_response.json() == {"detail": "Invalid refresh token"}
 
     # Verify that the access token is also invalidated
     me_response = await async_client.get("/user/me", headers=headers)

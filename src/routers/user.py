@@ -3,17 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from datetime import date
 
-from ..schemas.user_schema import UserIn, UserOut, UserUpdateProfile
+from ..schemas.user_schema import UserIn, UserOut, UserUpdateProfile, PasswordChange
 from ..schemas.history_schema import HistoryOut
 from ..exceptions.http_errors import (
     USER_CREATION_FAILED,
     USER_ALREADY_EXISTS,
     SERVER_ERROR,
     EMAIL_ALREADY_EXISTS,
-    USER_NOT_FOUND
+    USER_NOT_FOUND,
+    INVALID_OLD_PASSWORD
 )
 from ..dependencies import get_async_db
-from ..services import auth_services, user_services, history_services
+from ..services import auth_services, user_services, history_services, password_services
 from ..models.user_model import UserModel
 
 user = APIRouter()
@@ -74,11 +75,24 @@ async def get_user_id(
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
+    user = await user_services.get_user_by_id(db, user_id)
+    if not user:
+        raise USER_NOT_FOUND
+    return UserOut.model_validate(user)
+
+
+@user.put("/me/password", status_code=200)
+async def change_password(
+    password_change: PasswordChange,
+    current_user: UserModel = Depends(auth_services.auth_access_token),
+    db: AsyncSession = Depends(get_async_db),
+):
+    if not password_services.verify_password(password_change.old_password, current_user.password):
+        raise INVALID_OLD_PASSWORD
+
     try:
-        user = await user_services.get_user_by_id(db, user_id)
-        if not user:
-            raise USER_NOT_FOUND
-        return UserOut.model_validate(user)
+        await user_services.update_password(db, current_user, password_change.new_password)
+        return {"detail": "Password updated successfully"}
     except Exception:
         raise SERVER_ERROR
 

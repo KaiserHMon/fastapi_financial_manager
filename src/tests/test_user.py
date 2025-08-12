@@ -137,3 +137,83 @@ async def test_delete_current_user_invalid_token(async_client: AsyncClient):
     response = await async_client.delete("/user/me", headers={"Authorization": "Bearer invalidtoken"})
     assert response.status_code == 401
     assert response.json()["detail"] == "Could not validate credentials."
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id(async_client: AsyncClient, access_token: str, db_session: AsyncSession):
+    user_in = UserIn(username="testuser2", full_name="Test User 2", email="test2@example.com", password="password")
+    user = await create_user(db_session, user_in)
+    response = await async_client.get(f"/user/{user.id}", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["username"] == "testuser2"
+    assert data["full_name"] == "Test User 2"
+    assert data["email"] == "test2@example.com"
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_id_not_found(async_client: AsyncClient, access_token: str):
+    response = await async_client.get("/user/999", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found."
+
+
+@pytest.mark.asyncio
+async def test_get_user_history(async_client: AsyncClient, access_token: str):
+    response = await async_client.get("/user/me/history", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_get_user_history_with_dates(async_client: AsyncClient, access_token: str):
+    response = await async_client.get("/user/me/history?from_date=2023-01-01&to_date=2023-12-31", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_get_user_history_with_pagination(async_client: AsyncClient, access_token: str):
+    response = await async_client.get("/user/me/history?skip=0&limit=10", headers={"Authorization": f"Bearer {access_token}"})
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.asyncio
+async def test_change_password(async_client: AsyncClient, access_token: str):
+    response = await async_client.put("/user/me/password",
+                                      headers={"Authorization": f"Bearer {access_token}"},
+                                      json={"old_password": "password", "new_password": "new_password"})
+    assert response.status_code == 200
+    assert response.json()["detail"] == "Password updated successfully"
+
+    # Try to log in with the new password
+    response = await async_client.post("/auth/login", data={"username": "testuser", "password": "new_password"})
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+
+@pytest.mark.asyncio
+async def test_change_password_invalid_old_password(async_client: AsyncClient, access_token: str):
+    response = await async_client.put("/user/me/password",
+                                      headers={"Authorization": f"Bearer {access_token}"},
+                                      json={"old_password": "wrong_password", "new_password": "new_password"})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid old password"
+
+
+@pytest.mark.asyncio
+async def test_change_password_no_token(async_client: AsyncClient):
+    response = await async_client.put("/user/me/password",
+                                      json={"old_password": "password", "new_password": "new_password"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
+
+@pytest.mark.asyncio
+async def test_change_password_invalid_token(async_client: AsyncClient):
+    response = await async_client.put("/user/me/password",
+                                      headers={"Authorization": "Bearer invalidtoken"},
+                                      json={"old_password": "password", "new_password": "new_password"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Could not validate credentials."

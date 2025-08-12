@@ -48,3 +48,11 @@ async def get_all_users(db: AsyncSession) -> list[UserModel]:
 async def get_user_by_id(db: AsyncSession, user_id: int) -> UserModel | None:
     user = await db.execute(select(UserModel).where(UserModel.id == user_id))
     return user.scalar_one_or_none()
+
+
+async def update_password(db: AsyncSession, user: UserModel, new_password: str) -> UserModel:
+    user.password = get_password_hash(new_password)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
