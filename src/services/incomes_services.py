@@ -24,6 +24,8 @@ async def get_incomes(
     user: UserModel,
     from_date: date | None,
     to_date: date | None,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[IncomeModel]:
     query = (
         select(IncomeModel)
@@ -35,6 +37,7 @@ async def get_incomes(
     if to_date:
         query = query.where(IncomeModel.date <= to_date)
 
+    query = query.offset(skip).limit(limit)
     incomes = await db.execute(query)
     return incomes.scalars().all()
 

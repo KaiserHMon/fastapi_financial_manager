@@ -42,8 +42,12 @@ async def list_expenses(
     current_user: UserModel = Depends(auth_services.auth_access_token),
     from_date: date | None = Query(default=None),
     to_date: date | None = Query(default=None),
+    skip: int = 0,
+    limit: int = 100,
 ):
-    return await expenses_services.get_expenses(db, current_user, from_date, to_date)
+    return await expenses_services.get_expenses(
+        db, current_user, from_date, to_date, skip, limit
+    )
 
 
 @expenses.get("/{expense_id}", response_model=ExpenseOut)

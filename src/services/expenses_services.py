@@ -25,6 +25,8 @@ async def get_expenses(
     user: UserModel,
     from_date: date | None,
     to_date: date | None,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[ExpenseModel]:
     query = (
         select(ExpenseModel)
@@ -36,6 +38,7 @@ async def get_expenses(
     if to_date:
         query = query.where(ExpenseModel.date <= to_date)
 
+    query = query.offset(skip).limit(limit)
     result = await db.execute(query)
     return result.scalars().all()
 

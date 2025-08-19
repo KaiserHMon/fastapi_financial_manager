@@ -41,9 +41,13 @@ async def get_incomes(
     db: AsyncSession = Depends(get_async_db),
     from_date: date | None = Query(default=None),
     to_date: date | None = Query(default=None),
+    skip: int = 0,
+    limit: int = 100,
 ):
     try:
-        return await incomes_services.get_incomes(db, current_user, from_date, to_date)
+        return await incomes_services.get_incomes(
+            db, current_user, from_date, to_date, skip, limit
+        )
     except Exception:
         raise SERVER_ERROR
 
