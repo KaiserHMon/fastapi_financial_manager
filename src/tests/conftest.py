@@ -12,7 +12,7 @@ from ..models.categories_model import CategoryModel
 from ..models.expenses_model import ExpenseModel
 from ..models.history_model import HistoryModel
 from ..dependencies import get_async_db
-from ..services.password_services import get_password_hash
+from ..services.password_services import PasswordService
 
 
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -60,7 +60,7 @@ async def test_user(db_session: AsyncSession):
         username="testuser",
         full_name="Test User",
         email="testuser@example.com",
-        password=get_password_hash("password"),
+        password=PasswordService.hash_password("password"),
     )
     db_session.add(user)
     await db_session.commit()

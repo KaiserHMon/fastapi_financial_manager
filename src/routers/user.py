@@ -14,7 +14,8 @@ from ..exceptions.http_errors import (
     INVALID_OLD_PASSWORD
 )
 from ..dependencies import get_async_db
-from ..services import auth_services, user_services, history_services, password_services
+from ..services import auth_services, user_services, history_services
+from ..services.password_services import PasswordService
 from ..models.user_model import UserModel
 
 user = APIRouter()
@@ -87,7 +88,7 @@ async def change_password(
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
 ):
-    if not password_services.verify_password(password_change.old_password, current_user.password):
+    if not PasswordService.verify_password(password_change.old_password, current_user.password):
         raise INVALID_OLD_PASSWORD
 
     try:

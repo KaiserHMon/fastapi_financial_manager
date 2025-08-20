@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from ..models.user_model import UserModel
 from ..schemas.user_schema import UserIn, UserUpdateProfile
-from ..services.password_services import get_password_hash
+from ..services.password_services import PasswordService
 
 
 async def get_user(db: AsyncSession, username: str) -> UserModel | None:
@@ -16,7 +16,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> UserModel | None:
 
 
 async def create_user(db: AsyncSession, user: UserIn) -> UserModel:
-    hashed_password = get_password_hash(user.password)
+    hashed_password = PasswordService.hash_password(user.password)
     user_db = UserModel(**user.model_dump(exclude={"password"}), password=hashed_password)
     db.add(user_db)
     await db.commit()
@@ -51,7 +51,7 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> UserModel | None:
 
 
 async def update_password(db: AsyncSession, user: UserModel, new_password: str) -> UserModel:
-    user.password = get_password_hash(new_password)
+    user.password = PasswordService.hash_password(new_password)
     db.add(user)
     await db.commit()
     await db.refresh(user)

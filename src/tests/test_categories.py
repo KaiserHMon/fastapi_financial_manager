@@ -3,7 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.user_model import UserModel
-from ..services.password_services import get_password_hash
+from ..services.password_services import PasswordService
 
 
 @pytest.fixture(scope="function")
@@ -12,7 +12,7 @@ async def test_user(db_session: AsyncSession):
         username="testuser",
         full_name="Test User",
         email="testuser@example.com",
-        password=get_password_hash("password"),
+        password=PasswordService.hash_password("password"),
     )
     db_session.add(user)
     await db_session.commit()

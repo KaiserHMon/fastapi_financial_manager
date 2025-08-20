@@ -46,6 +46,11 @@ CATEGORY_NOT_FOUND = HTTPException(
     detail="Category not found."
 )
 
+NOT_FOUND = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Resource not found."
+)
+
 
 # Conflict error (409)
 USER_ALREADY_EXISTS = HTTPException(

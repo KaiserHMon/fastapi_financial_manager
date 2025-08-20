@@ -1,14 +1,17 @@
-from fastapi import Depends
+from fastapi import Depends, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from ..schemas.token_schema import TokenData
-from ..exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN
+from ..exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN, NOT_FOUND
 from ..services import user_services
 from ..models.token_denylist_model import TokenDenylist
 from ..models.user_model import UserModel
+from ..models.password_reset_token_model import PasswordResetToken
 from ..dependencies import get_async_db
+from ..services.password_services import PasswordService
+from ..tasks import send_password_reset_email
 
 from datetime import timedelta
 from typing import Annotated
@@ -131,3 +134,43 @@ async def auth_refresh_token(
     )
 
     return create_access_token(new_access_token)
+
+
+async def request_password_reset(
+    email: str, background_tasks: BackgroundTasks, db: AsyncSession
+):
+    user = await user_services.get_user_by_email(db, email)
+    if not user:
+        raise NOT_FOUND("User not found")
+
+    token = str(uuid.uuid4())
+    expires_at = datetime.datetime.now() + datetime.timedelta(minutes=30)
+    
+    reset_token = PasswordResetToken(
+        id=token,
+        user_id=user.id,
+        expires_at=expires_at,
+    )
+    db.add(reset_token)
+    await db.commit()
+
+    background_tasks.add_task(
+        send_password_reset_email, email, token
+    )
+
+
+async def reset_password(token: str, new_password, db: AsyncSession):
+    
+    result = await db.execute(select(PasswordResetToken).filter(PasswordResetToken.id == token))
+    reset_token = result.scalars().first()
+    
+    if not reset_token or reset_token.expires_at < datetime.datetime.now():
+        raise CREDENTIALS_EXCEPTION
+
+    user = await user_services.get_user_by_id(db, reset_token.user_id)
+    if not user:
+        raise NOT_FOUND("User not found")
+
+    user.hashed_password = PasswordService.hash_password(new_password)
+    await db.delete(reset_token)
+    await db.commit()

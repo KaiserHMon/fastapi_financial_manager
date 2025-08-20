@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
@@ -10,12 +10,16 @@ from ..schemas.token_schema import (
     LogoutRequest,
     LogoutResponse,
     AccessTokenResponse,
-    RefreshTokenRequest
+    RefreshTokenRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest
 )
 from ..dependencies import get_async_db
 from ..exceptions.http_errors import USER_NOT_FOUND, WRONG_PASSWORD
 
-from ..services import user_services, password_services, auth_services
+from ..services import user_services, auth_services
+from ..services.password_services import PasswordService
+
 
 
 auth = APIRouter()
@@ -35,7 +39,7 @@ async def login_for_tokens(
     if not user:
         raise USER_NOT_FOUND
 
-    is_password_correct = password_services.verify_password(
+    is_password_correct = PasswordService.verify_password(
         plain_password=formdata.password, hashed_password=user.password
     )
     if not is_password_correct:
@@ -83,3 +87,21 @@ async def logout(
     await auth_services.add_token_to_denylist(db, logout_request.refresh_token)
     await auth_services.add_token_to_denylist(db, token)
     return {"detail": "Successfully logged out"}
+
+
+@auth.post("/forgot-password")
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_async_db),
+):
+    await auth_services.request_password_reset(request.email, background_tasks, db)
+    return {"detail": "Password reset email sent"}
+
+
+@auth.post("/reset-password")
+async def reset_password(
+    request: ResetPasswordRequest, db: AsyncSession = Depends(get_async_db)
+):
+    await auth_services.reset_password(request.token, request.new_password, db)
+    return {"detail": "Password has been reset successfully"}
