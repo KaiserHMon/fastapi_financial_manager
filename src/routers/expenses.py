@@ -3,13 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
 from datetime import date
-
-from ..dependencies import get_async_db
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
-from typing import List
-from datetime import date
+from fastapi_cache.decorator import cache
 
 from ..dependencies import get_async_db
 from ..services import auth_services, expenses_services
@@ -37,6 +31,7 @@ async def add_expense(
 
 
 @expenses.get("/", response_model=List[ExpenseOut])
+@cache(expire=3600)
 async def list_expenses(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_services.auth_access_token),
@@ -51,6 +46,7 @@ async def list_expenses(
 
 
 @expenses.get("/{expense_id}", response_model=ExpenseOut)
+@cache(expire=3600)
 async def retrieve_expense(
     expense_id: int,
     db: AsyncSession = Depends(get_async_db),

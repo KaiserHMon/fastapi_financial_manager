@@ -8,12 +8,6 @@ from alembic import context
 from src.config.database import base, DB_URL
 
 # Import your models
-from src.models.user_model import UserModel
-from src.models.categories_model import CategoryModel
-from src.models.expenses_model import ExpenseModel
-from src.models.history_model import HistoryModel
-from src.models.incomes_model import IncomeModel
-from src.models.token_denylist_model import TokenDenylist
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

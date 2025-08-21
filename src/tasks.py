@@ -1,11 +1,12 @@
+from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy import delete
 from .models.token_denylist_model import TokenDenylist
 from .dependencies import get_async_db
 import datetime
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from .config.settings import settings
+from asyncio import anext
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,

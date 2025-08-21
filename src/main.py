@@ -2,7 +2,11 @@ from fastapi import FastAPI
 import uvicorn
 from fastapi_utils.tasks import repeat_every
 from contextlib import asynccontextmanager
+from redis import asyncio as aioredis
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 
+from .config.settings import settings
 from .routers.auth import auth
 from .routers.user import user
 from .routers.incomes import incomes
@@ -14,6 +18,9 @@ from .tasks import cleanup_expired_tokens
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    redis = aioredis.from_url(settings.REDIS_URL)
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+
     @repeat_every(seconds=60 * 60 * 24)  # 24 hours
     async def schedule_cleanup():
         await cleanup_expired_tokens()

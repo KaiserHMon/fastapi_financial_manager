@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
+from fastapi_cache.decorator import cache
 
 from ..schemas.incomes_schema import IncomeIn, IncomeOut
 from ..models.user_model import UserModel
@@ -36,6 +37,7 @@ async def create_income(
 
 
 @incomes.get("/", response_model=list[IncomeOut])
+@cache(expire=3600)
 async def get_incomes(
     current_user: UserModel = Depends(auth_services.auth_access_token),
     db: AsyncSession = Depends(get_async_db),
@@ -94,6 +96,7 @@ async def delete_income(
 
 
 @incomes.get("/{income_id}", response_model=IncomeOut)
+@cache(expire=3600)
 async def get_income_by_id(
     income_id: int,
     current_user: UserModel = Depends(auth_services.auth_access_token),

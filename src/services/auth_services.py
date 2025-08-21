@@ -7,7 +7,6 @@ from ..schemas.token_schema import TokenData
 from ..exceptions.http_errors import CREDENTIALS_EXCEPTION, INVALID_REFRESH_TOKEN, NOT_FOUND
 from ..services import user_services
 from ..models.token_denylist_model import TokenDenylist
-from ..models.user_model import UserModel
 from ..models.password_reset_token_model import PasswordResetToken
 from ..dependencies import get_async_db
 from ..services.password_services import PasswordService

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from typing import List
+from fastapi_cache.decorator import cache
 
 from ..dependencies import get_async_db
 from ..services import auth_services, categories_services
@@ -36,6 +37,7 @@ async def add_category(
 
 
 @categories.get("/", response_model=List[CategoriesOut])
+@cache(expire=3600)
 async def list_categories(
     db: AsyncSession = Depends(get_async_db),
     current_user: UserModel = Depends(auth_services.auth_access_token),
@@ -44,6 +46,7 @@ async def list_categories(
 
 
 @categories.get("/{category_id}", response_model=CategoriesOut)
+@cache(expire=3600)
 async def retrieve_category(
     category_id: int,
     db: AsyncSession = Depends(get_async_db),

@@ -17,6 +17,7 @@ It was developed as a personal practice project to strengthen and apply knowledg
 - **FastAPI** - Main Framework
 - **SQLAlchemy**  ORM for database connection
 - **MySQL** - Relational database
+- **Redis** - In-memory data store for caching
 - **JWT** - Token-based authentication
 - **Alembic** - Database Version Control
 - **Ruff** - Linter and code formatter
@@ -30,6 +31,7 @@ It was developed as a personal practice project to strengthen and apply knowledg
 
 *   Python 3.11+
 *   Poetry for dependency management
+*   Redis
 
 ### Installation
 
@@ -42,6 +44,7 @@ It was developed as a personal practice project to strengthen and apply knowledg
     ```bash
     poetry install
     ```
+
 
 ### Configuration
 
@@ -64,6 +67,8 @@ It was developed as a personal practice project to strengthen and apply knowledg
 
 
     EXCHANGE_API_KEY=tu_api_key_de_monedas
+
+    REDIS_URL=your_redis_port
     ```
 
 ### Running the application
@@ -76,7 +81,24 @@ It was developed as a personal practice project to strengthen and apply knowledg
     ```bash
     poetry run uvicorn src.main:app --reload
     ```
-The API will be available at `http://localhost:8000`.
+
+---
+
+## Caching
+
+This application uses Redis for caching to improve performance. The following endpoints are cached:
+
+*   `GET /categories/`
+*   `GET /categories/{category_id}`
+*   `GET /incomes/`
+*   `GET /incomes/{income_id}`
+*   `GET /expenses/`
+*   `GET /expenses/{expense_id}`
+*   `GET /user/balance`
+*   `GET /user/balance/incomes`
+*   `GET /user/balance/expenses`
+
+The cache expires after 1 hour (3600 seconds). When new data is created, updated, or deleted, the cache is not automatically invalidated. To clear the cache, you need to restart the application.
 
 ---
 
@@ -99,7 +121,7 @@ The following endpoints are available:
 *   `/categories`: Category management
 *   `/incomes`: Income management
 *   `/expenses`: Expense management
-*   `/history`: Financial history
+*   `/user_balance`: User balance (total, incomes and expenses)
 
 For more details on each endpoint, you can access the interactive documentation at `http://localhost:8000/docs` when the application is running.
 
@@ -107,20 +129,6 @@ For more details on each endpoint, you can access the interactive documentation 
 
 ## ✒️ Authoring
 
-This project was developed by [Your Name](https://github.com/KaiserHMon).
+This project was developed by [Juan Segundo Hardoy](https://github.com/KaiserHMon).
 
 ---
-
-## 🏗️ Project structure
-
-/src
-  /models           # SQLAlchemy model definitions
-  /schemas          # Pydantic schemas
-  /routes           # API routes
-  /services         # Business logic
-  /utils            # Auxiliary functions
-  /tests            # Unit tests
-/tests              # Integration tests
-main.py             # Application entry point
-alembic.ini         # Migration configuration
-.env.example        # Environment variable template

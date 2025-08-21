@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int
     EXCHANGE_API_KEY: str
     GEMINI_API_KEY: str
+    REDIS_URL: str
 
     MAIL_USERNAME: str
     MAIL_PASSWORD: str

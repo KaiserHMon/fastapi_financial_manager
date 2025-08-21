@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..services.user_services import get_user, get_user_by_email, create_user, update_user
-from ..schemas.user_schema import UserIn, UserBase, UserUpdateProfile
+from ..schemas.user_schema import UserIn, UserUpdateProfile
 
 
 @pytest.mark.asyncio

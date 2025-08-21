@@ -1,5 +1,4 @@
 import pytest
-from fastapi import Depends
 
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.orm import sessionmaker
