@@ -98,7 +98,7 @@ This application uses Redis for caching to improve performance. The following en
 *   `GET /user/balance/incomes`
 *   `GET /user/balance/expenses`
 
-The cache expires after 1 hour (3600 seconds). When new data is created, updated, or deleted, the cache is not automatically invalidated. To clear the cache, you need to restart the application.
+The cache expires after 1 hour (3600 seconds).
 
 ---
 

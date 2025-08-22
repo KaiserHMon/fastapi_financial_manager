@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import uvicorn
 from fastapi_utils.tasks import repeat_every
 from contextlib import asynccontextmanager
+
 from redis import asyncio as aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -14,6 +15,7 @@ from .routers.categories import categories
 from .routers.expenses import expenses
 from .routers.user_balance import balance
 from .tasks import cleanup_expired_tokens
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

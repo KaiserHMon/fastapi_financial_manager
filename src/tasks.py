@@ -1,12 +1,10 @@
 from __future__ import annotations
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete
 from .models.token_denylist_model import TokenDenylist
 from .dependencies import get_async_db
 import datetime
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from .config.settings import settings
-from asyncio import anext
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -21,12 +19,13 @@ conf = ConnectionConfig(
 )
 
 async def cleanup_expired_tokens():
-    db: AsyncSession = await anext(get_async_db())
-    async with db as session:
-        await session.execute(
-            delete(TokenDenylist).where(TokenDenylist.exp < datetime.datetime.now())
-        )
-        await session.commit()
+    async for db in get_async_db():
+        async with db as session:
+            await session.execute(
+                delete(TokenDenylist).where(TokenDenylist.exp < datetime.datetime.now())
+            )
+            await session.commit()
+
 
 async def send_password_reset_email(email: str, token: str):
     html = f"""<p>Hi, this is your link to reset your password</p> 

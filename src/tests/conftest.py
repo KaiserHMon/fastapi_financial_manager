@@ -1,8 +1,14 @@
 import pytest
-
 from httpx import AsyncClient, ASGITransport
+
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from redis import asyncio as aioredis
+import redis
 
 from ..main import app
 from ..models.user_model import UserModel
@@ -12,6 +18,7 @@ from ..models.expenses_model import ExpenseModel
 from ..models.history_model import HistoryModel
 from ..dependencies import get_async_db
 from ..services.password_services import PasswordService
+from ..config.settings import settings
 
 
 DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -19,6 +26,21 @@ engine = create_async_engine(DATABASE_URL, echo=True)
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine, class_=AsyncSession, expire_on_commit=False
 )
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def initialize_cache():
+    try:
+        if settings.REDIS_URL:
+            redis_client = aioredis.from_url(settings.REDIS_URL, encoding="utf8", decode_responses=True)
+            await redis_client.ping()
+            FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+        else:
+            FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
+    except (redis.exceptions.ConnectionError, ValueError):
+        FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
+    yield
+    await FastAPICache.clear()
 
 
 @pytest.fixture(scope="function")
@@ -43,7 +65,7 @@ async def db_session():
 
 
 @pytest.fixture(scope="function")
-async def async_client(db_session: AsyncSession):
+async def async_client(db_session: AsyncSession, initialize_cache):
     async def get_test_db():
         yield db_session
     app.dependency_overrides[get_async_db] = get_test_db
