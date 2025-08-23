@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
-    EXCHANGE_API_KEY: str
+    
     GEMINI_API_KEY: str
     REDIS_URL: str
 

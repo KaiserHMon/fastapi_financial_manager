@@ -39,6 +39,7 @@ app.include_router(user, prefix="/user", tags=["User"])
 app.include_router(incomes, prefix="/incomes", tags=["Incomes"])
 app.include_router(categories, prefix="/categories", tags=["Categories"])
 app.include_router(expenses, prefix="/expenses", tags=["Expenses"])
+app.include_router(exchange_router, prefix="/exchange", tags=["Exchange"])
 
 
 @app.get("/", tags=["Root"])

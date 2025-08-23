@@ -1,6 +1,6 @@
 # 💰 Finance manager API
 
-API for personal financial management. It allows users to manage their income and expenses, organize them by categories and origin, visualize their balance, calculate their savings compared to the previous month, and access expense distribution graphs. It also provides updated quotes for currencies of interest such as the MEP dollar, blue dollar, Brazilian real and euro.
+API for personal financial management. It allows users to manage their income and expenses, organize them by categories and origin, visualize their balance, calculate their savings compared to the previous month, and access expense distribution graphs. It also provides updated quotes for currencies of interest from the official API of the Central Bank of Argentina (BCRA).
 
 ---
 
@@ -66,7 +66,7 @@ It was developed as a personal practice project to strengthen and apply knowledg
     REFRESH_TOKEN_EXPIRE_DAYS=your_refresh_token_expire_minutes_here
 
 
-    EXCHANGE_API_KEY=tu_api_key_de_monedas
+    
 
     REDIS_URL=your_redis_port
     ```
@@ -98,7 +98,7 @@ This application uses Redis for caching to improve performance. The following en
 *   `GET /user/balance/incomes`
 *   `GET /user/balance/expenses`
 
-The cache expires after 1 hour (3600 seconds).
+The cache expires after 1 hour (3600 seconds). For memory management, the Redis server can be configured to use an LRU (Least Recently Used) eviction policy.
 
 ---
 
@@ -122,6 +122,10 @@ The following endpoints are available:
 *   `/incomes`: Income management
 *   `/expenses`: Expense management
 *   `/user_balance`: User balance (total, incomes and expenses)
+*   `/exchange`: Get all available currency exchange rates from the BCRA API.
+*   `/exchange/dollar`: Get the exchange rate for the US Dollar.
+*   `/exchange/euro`: Get the exchange rate for the Euro.
+*   `/exchange/real`: Get the exchange rate for the Brazilian Real.
 
 For more details on each endpoint, you can access the interactive documentation at `http://localhost:8000/docs` when the application is running.
 
