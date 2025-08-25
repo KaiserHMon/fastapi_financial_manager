@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from fastapi_utils.tasks import repeat_every
 from contextlib import asynccontextmanager
@@ -8,13 +9,17 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 
 from .config.settings import settings
+from .middleware import add_process_time_header, global_exception_handler
+from .tasks import cleanup_expired_tokens
+
 from .routers.auth import auth
 from .routers.user import user
 from .routers.incomes import incomes
 from .routers.categories import categories
 from .routers.expenses import expenses
 from .routers.user_balance import balance
-from .tasks import cleanup_expired_tokens
+from .routers.exchange import exchange
+
 
 
 @asynccontextmanager
@@ -33,13 +38,33 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="InFinity Managment", version="0.1.0", lifespan=lifespan)
 
+origins = [
+    "http://localhost:3000",
+    "http://localhost:8080",
+]
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Process Time Header Middleware
+app.middleware("http")(add_process_time_header)
+
+# Global Exception Handler
+app.exception_handler(Exception)(global_exception_handler)
+
 app.include_router(auth, prefix="/auth", tags=["Auth"])
 app.include_router(balance, prefix="/user", tags=["Balance"])
 app.include_router(user, prefix="/user", tags=["User"])
 app.include_router(incomes, prefix="/incomes", tags=["Incomes"])
 app.include_router(categories, prefix="/categories", tags=["Categories"])
 app.include_router(expenses, prefix="/expenses", tags=["Expenses"])
-app.include_router(exchange_router, prefix="/exchange", tags=["Exchange"])
+app.include_router(exchange, prefix="/exchange", tags=["Exchange"])
 
 
 @app.get("/", tags=["Root"])
